@@ -1,0 +1,14 @@
+{
+  "name": "Fancy Font Name Bot",
+  "description": "Telegram bot that converts any name into 50+ fancy fonts and decorated stylish names.",
+  "repository": "https://github.com/oyevipthoma88/Fontnamebot",
+  "keywords": ["telegram", "bot", "fonts", "fancy", "stylish-name"],
+  "stack": "heroku-24",
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "formation": { "worker": { "quantity": 1, "size": "eco" } },
+  "env": {
+    "BOT_TOKEN": { "description": "Bot token from @BotFather", "required": true },
+    "CHANNEL_USERNAME": { "description": "Your channel username without @ (used in hashtags)", "value": "FontsxWorld", "required": false },
+    "TUTORIAL_URL": { "description": "Optional tutorial link", "required": false }
+  }
+}
