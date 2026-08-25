@@ -1,0 +1,10 @@
+{
+  "name": "fontnamebot",
+  "version": "1.0.0",
+  "description": "Telegram bot that turns any name into 50+ fancy fonts and decorated stylish names",
+  "main": "bot.js",
+  "scripts": { "start": "node bot.js" },
+  "engines": { "node": "20.x" },
+  "dependencies": { "node-telegram-bot-api": "^0.66.0" },
+  "license": "MIT"
+}
