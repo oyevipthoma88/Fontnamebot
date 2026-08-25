@@ -137,37 +137,137 @@ function styleList(text) {
   return out;
 }
 
-// Decorated "aesthetic name" templates like fancy Telegram bios
-const DECOR = [
-  (n) => `\u{1F9FF}\n\u{1D104}\u0590\u{1D104} \u22c6\u2500\u253c \u{1F338}\u203a\u203a "\u{1FA88}\u{1F99A}\u2728\u{1F48C}\n\u{1F451}\n\u2500   ${n} \u21dd \u{1F6A9}\n\u{1F451}`,
-  (n) => `\u{1F48E}\n\u1BF0\uFAE0 \u{1D145}\u0590 \u{1D3A2}\u1D6A\u27f6\u22c6\u{1F33E}\n${n}\n\u{1F48E}`,
-  (n) => `\u{1F56F}\n\u{1D05B}\u3099 ${n} \u{1FAC0}\u{1F082}\n\u{1F56F}`,
-  (n) => `\u{1F451}\n  \u23ef\u2060\u2060   ${n}  \uA1A3\u{1D586}\u{1D05B}\n\u{1F451}`,
-  (n) => `\u2727\u2500\u2500\u25c8\u2500\u2500\u2727\n\u2727 ${n} \u2727\n\u2727\u2500\u2500\u25c8\u2500\u2500\u2727`,
-  (n) => `\u2570\u2500\u2500\u2500 \u2740 ${n} \u2740 \u2500\u2500\u2500\u256d`,
-  (n) => `\u1D31\u02b3\u1d49\u1d43\u1d50 \u25c6 ${n} \u25c6 \u1D33\u1d52\u1d48`,
-  (n) => `\u{1F31F}\u0361\u0361 ${n} \u0361\u0361\u{1F31F}`,
-  (n) => `\u2500\u2504\u2508 ${n} \u2508\u2504\u2500`,
-  (n) => `\u2591\u2592\u2593 ${n} \u2593\u2592\u2591`,
-  (n) => `\u{1F338} \u2765 ${n} \u2765 \u{1F338}`,
-  (n) => `\u26a1 \u01c0\u01c0 ${n} \u01c0\u01c0 \u26a1`,
+// ───────────────────────────────────────────────
+// AESTHETIC NAME ENGINE (strong logic)
+// ───────────────────────────────────────────────
+
+// Seeded RNG so ek naam ke liye result stable rahe, par har naam different ho
+function seedOf(str) {
+  let h = 2166136261;
+  for (const ch of str) {
+    h ^= ch.codePointAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function rng(seed) {
+  let s = seed || 1;
+  return () => {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5; s >>>= 0;
+    return s / 4294967296;
+  };
+}
+const pick = (arr, r) => arr[Math.floor(r() * arr.length) % arr.length];
+
+// Letter-level "greek/fancy mix" like  𝙆𝜶𝜷𝜾𝙧 ,  𝚬𝜼𝚌𝜶𝜼𝛐𝜾
+const MIX_SETS = [
+  { a: "\u{1D736}", b: "\u{1D737}", c: "\u{1D68C}", e: "\u{1D6C6}", i: "\u{1D73E}", k: "\u{1D74B}", n: "\u{1D73C}", o: "\u{1D740}", u: "\u{1D74E}", v: "\u{1D75B}", s: "\u{1D5CC}", r: "\u{1D731}", t: "\u{1D749}", m: "\u{1D726}", g: "\u{1D6FE}", l: "\u{1D746}", h: "\u{1D745}", d: "\u{1D6C5}", p: "\u{1D746}" },
+  { a: "\u03b1", b: "\u03b2", c: "\u03c2", e: "\u03b5", i: "\u03b9", k: "\u03ba", n: "\u03b7", o: "\u03bf", u: "\u03c5", v: "\u03bd", s: "\u0455", r: "\u0491", t: "\u03c4", m: "\u043c", g: "\u0263", l: "\u029f", h: "\u04bb", d: "\u0501", p: "\u03c1" },
+  { a: "\u0430", b: "\u0432", c: "\u0441", e: "\u0454", i: "\u0456", k: "\u043a", n: "\u0438", o: "\u043e", u: "\u04af", v: "\u1d20", s: "\u0455", r: "\u0433", t: "\u0442", m: "\u043c", g: "\u0433", l: "\u04c5", h: "\u043d", d: "\u0434", p: "\u0440" },
 ];
 
-function decoratedNames(text, tagLine = "") {
-  const base = [
-    applyMap(MAPS["Bold Italic Serif"], text),
-    applyMap(MAPS["Script"], text),
-    applyMap(MAPS["Fraktur"], text),
-    applyMap(MAPS["Greek Mix"], text),
-    applyMap(MAPS["Small Caps"], text),
-    applyMap(MAPS["Sans Bold Italic"], text),
-  ];
+// Base fonts used for the untouched letters
+const BASE_FONTS = ["Sans Bold Italic", "Bold Italic Serif", "Bold Fraktur", "Bold Script", "Sans Bold", "Monospace"];
+
+// Zero-width / combining decorations sprinkled inside letters
+const MARKS = ["\u0353", "\u0359", "\u0325", "\u0348", "\u034D", "\u0362", "\u0334", "\u0350", "\u0357", "\u035B"];
+
+// Ornament clusters (aesthetic Telegram style)
+const PRE = [
+  "\u{1D104}\u0590\u{1D104} \u22c6\u2500\u253c",
+  "\u1BF0\uFAE0 \u{1D145}\u0590",
+  "\u{1D05B}\u3099",
+  "\u23ef\u2060\u2060",
+  "\u2727\u2500\u25c8",
+  "\u2570\u2500\u2500 \u2740",
+  "\u2500\u2504\u2508",
+  "\u16E7\u0DF4",
+  "\u10DA\u0F3C",
+  "\u0A73\u0A02",
+];
+const POST = [
+  "\u21dd \u{1F6A9}",
+  "\u27f6\u22c6\u{1F33E}",
+  "\uA1A3\u{1D586}",
+  "\u2740 \u2500\u2500\u256d",
+  "\u25c8\u2500\u2727",
+  "\u2508\u2504\u2500",
+  "\u01c0\u01c0 \u26a1",
+  "\u0F3D\u16E7",
+  "\u2765 \u{1F338}",
+  "\u{1F082}\u{1FAC0}",
+];
+const SEP = ["\u21dd", "\u2500\u253c", "\u2740", "\u0f3c\u0f3d", "\u2027", "\u01c0", "\u22c6", "\u2508"];
+const FRAMES = ["\u{1F9FF}", "\u{1F451}", "\u{1F48E}", "\u{1F56F}", "\u{1F6A9}", "\u{1F338}", "\u{1F99A}", "\u2728", "\u{1F48C}", "\u{1FA88}", "\u{1F31F}", "\u26a1"];
+const FILLERS = ["\u2500\u2500", "\u2504\u2504", "\u00b7\u00b7", "\u2508\u2508", "\u2027\u2027"];
+
+// Mix letters: base font + lookalike swaps + optional marks
+function mixName(text, r, opts = {}) {
+  const set = opts.set || pick(MIX_SETS, r);
+  const base = MAPS[opts.base || pick(BASE_FONTS, r)];
+  const density = opts.marks == null ? r() * 0.35 : opts.marks;
+  return cp(text)
+    .map((ch) => {
+      const low = ch.toLowerCase();
+      let out;
+      if (ch === " ") return " ";
+      // lowercase letters -> greek/cyrillic lookalike, capitals stay in the base font
+      if (ch === low && set[low]) out = set[low];
+      else out = base[ch] || base[low] || ch;
+      if (r() < density) out += pick(MARKS, r);
+      return out;
+    })
+    .join("");
+}
+
+// Letter-spaced variant:  𝐕 ༏ န 𝛂 𒁹 𝛂
+function spacedName(text, r) {
+  const styled = mixName(text, r, { marks: 0 });
+  const glue = pick([" \u0F0F ", " \u{1204A} ", " \u2027 ", " \u00b7 ", "  "], r);
+  return cp(styled).join(glue);
+}
+
+const LAYOUTS = [
+  // frame / ornament + name + ornament / frame / hashtag
+  (n, r) => `${pick(FRAMES, r)}\n\n${pick(PRE, r)} ${n} ${pick(POST, r)}\n\n${pick(FRAMES, r)}`,
+  (n, r) => {
+    const f = pick(FRAMES, r);
+    return `${f}\n\n${pick(FILLERS, r)}\u00a0 ${n} \u00a0${pick(FILLERS, r)}\n\n${f}`;
+  },
+  (n, r) => `${pick(FRAMES, r)}${pick(FRAMES, r)}\n\n\u2500 \u00a0 ${n} ${pick(SEP, r)} ${pick(POST, r)}\n\n${pick(FRAMES, r)}${pick(FRAMES, r)}`,
+  (n, r) => `${pick(PRE, r)}\n${n}\n${pick(POST, r)}`,
+  (n, r) => `\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256d\n\u2502 ${n} \u2502\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2570`,
+  (n, r) => `${pick(FRAMES, r)} \u00ab ${n} \u00bb ${pick(FRAMES, r)}`,
+];
+
+function hashTag(text, channel) {
+  const slug = text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  return channel ? `#${slug}@${channel}` : `#${slug}`;
+}
+
+// MAIN: N decorated aesthetic names, deterministic per name, no duplicates
+function decoratedNames(text, tagLine = "", count = 12) {
+  const r = rng(seedOf(text) ^ 0x9e3779b9);
+  const seen = new Set();
   const out = [];
-  DECOR.forEach((fn, i) => {
-    const name = base[i % base.length];
-    out.push(fn(name) + (tagLine ? `\n${tagLine}` : ""));
-  });
+  let guard = 0;
+  while (out.length < count && guard++ < count * 30) {
+    const mode = out.length % 3;
+    let name;
+    if (mode === 0) name = mixName(text, r);
+    else if (mode === 1) name = spacedName(text, r);
+    else {
+      const parts = text.trim().split(/\s+/);
+      name = parts.map((p) => mixName(p, r, { marks: 0.15 })).join(` ${pick(SEP, r)} `);
+    }
+    const block = LAYOUTS[out.length % LAYOUTS.length](name, r) + (tagLine ? `\n\n${tagLine}` : "");
+    if (seen.has(block)) continue;
+    seen.add(block);
+    out.push(block);
+  }
   return out;
 }
 
-module.exports = { styleList, decoratedNames, applyMap, MAPS };
+module.exports = { styleList, decoratedNames, applyMap, MAPS, mixName, spacedName, hashTag };
