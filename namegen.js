@@ -334,11 +334,25 @@ const VIRAL_SET = {
   w: ["𝛚", "ω", "ꝃ", "ᴡ", "ա", "ฝ", "𝘸"],
   x: ["𝑥", "Ӽ", "᥊", "Ӿ", "๏", "𝘹"],
   y: ["𝛄", "ყ", "𐌦", "ʏ", "ץ", "𝘆"],
-  z: ["𝑧", "չ", "ᴢ", "չ", "ʐ", "𝘇"],
+  z: ["𝑧", "չ", "ᴢ", "չ", "ʐ", "𝘇", "𝜁", "ʑ"],
 };
 
+// Mathematical Bold Greek lookalikes — stylish_name_bio / FontsxWorld posts
+// me sabse zyada yahi use hote hain (𝜧𝜤𝜨𝜨𝜤𝜮, 𝐒𝛊͢𝐥𝛆𝛈𝛕 style)
+for (const [letter, glyphs] of Object.entries({
+  a: ["𝜶", "𝛂", "𝒂", "𝙖"], b: ["𝜷", "𝛃", "𝐛"], d: ["𝜹", "𝛅", "𝒅"],
+  e: ["𝜺", "𝛆", "𝙚"], g: ["𝛄", "𝛾", "𝒈"], h: ["𝜂", "𝛈", "𝐡"],
+  i: ["𝜾", "𝛊", "𝒊"], k: ["𝜿", "𝛋", "𝐤"], l: ["𝜦", "𝛌", "𝒍"],
+  m: ["𝜇", "𝛍", "𝒎", "𝙢"], n: ["𝜈", "𝛈", "𝒏"], o: ["𝜊", "𝛐", "𝒐"],
+  p: ["𝜌", "𝛒", "𝒑"], r: ["𝜚", "𝛒", "𝒓"], s: ["𝜎", "𝜈", "𝒔"],
+  t: ["𝜏", "𝛕", "𝒕"], u: ["𝜐", "𝛖", "𝒖"], v: ["𝜐", "𝜈", "𝒗"],
+  w: ["𝜔", "𝛚", "𝒘"], x: ["𝜒", "𝛘", "𝒙"], y: ["𝜸", "𝛄", "𝒚"],
+})) VIRAL_SET[letter].push(...glyphs);
+
 // Halki combining marks (zitna channel use karta hai — render friendly)
-const VIRAL_MARKS = ["̓", "፟", "͛", "̙", "̴", "̥", "̎", "꯭", "ᷧ", "ִ", "໋", "᭄"];
+const VIRAL_MARKS = ["̓", "፟", "͛", "̙", "̴", "̥", "̎", "꯭", "ᷧ", "ִ", "໋", "᭄",
+  // Channels scan se naye marks (֟፝, ͢, ꙶ, ⃪⃮⃡ wale dense styles)
+  "֟፝", "͢", "֯", "ꙶ", "⃪", "⃮", "⃡", "⃜", "̈", "᪳"];
 // Capital letters ke liye base fonts
 const VIRAL_BASES = ["Sans Bold Italic", "Bold Italic Serif", "Bold Serif", "Sans Bold"];
 
@@ -366,6 +380,19 @@ const VIRAL_HEADS = [
   "ᯓᡣ𐭩 ",
   "˚₊· ͟͟͞➳❥ ",
   "◦•●◉✿ ",
+  // Channel scan (stylish_name_bio / Stylish_Name_Fonts) se naye heads
+  "⸙⤿ ",
+  "⎯꯭᛫ ",
+  "⏤͟͟͞ ",
+  "𐙚 ",
+  "𝍠꯭꯭ ",
+  "⵿࣬ꞏ ",
+  "⇠̽ ",
+  "〝",
+  "❛",
+  "🌸⃝ ",
+  "𝁘. ",
+  "⏤ ",
 ];
 // Channel tails: deco + ek emoji (vibe/flag) — frame emoji block ke bahar aata hai
 const VIRAL_TAILS = [
@@ -409,6 +436,21 @@ const VIRAL_TAILS = [
   " ⸙",
   " 𓆪ꪾ",
   " ꯭𓆪",
+  // Channel scan (stylish_name_bio / Stylish_Name_Fonts) se naye tails
+  " ֯",
+  " ͢",
+  " ᥫ᭡",
+  " ˎ˗",
+  " ⤹֯",
+  " 𔘓",
+  " ༗",
+  " 〬",
+  " ﹤﹨𝟑💗ˎ˗",
+  " ❜",
+  " ᡣ݆𐭩",
+  " 𝆺𝆺",
+  " ॰",
+  " 🌜֯",
   " 🪽",
   " ‹𝟑",
   " ⚡࿐",
