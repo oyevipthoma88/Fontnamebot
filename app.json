@@ -1,6 +1,6 @@
 {
   "name": "Fancy Font Name Bot",
-  "description": "Telegram bot that converts any name into 50+ fancy fonts and decorated stylish names.",
+  "description": "Telegram bot that converts any name into 65+ fancy fonts and decorated stylish names, with owner panel and channel scanner.",
   "repository": "https://github.com/oyevipthoma88/Fontnamebot",
   "keywords": ["telegram", "bot", "fonts", "fancy", "stylish-name"],
   "stack": "heroku-24",
@@ -8,7 +8,12 @@
   "formation": { "worker": { "quantity": 1, "size": "eco" } },
   "env": {
     "BOT_TOKEN": { "description": "Bot token from @BotFather", "required": true },
+    "OWNER_ID": { "description": "Your numeric Telegram user id (from @userinfobot) — Owner Panel iske liye", "required": true },
+    "OWNER_USERNAME": { "description": "Owner button me dikhne wala username (bina @)", "required": false },
     "CHANNEL_USERNAME": { "description": "Your channel username without @ (used in hashtags)", "value": "FontsxWorld", "required": false },
-    "TUTORIAL_URL": { "description": "Optional tutorial link", "required": false }
+    "TUTORIAL_URL": { "description": "Optional tutorial link", "required": false },
+    "API_ID": { "description": "my.telegram.org se (sirf channel scanner ke liye)", "required": false },
+    "API_HASH": { "description": "my.telegram.org se (sirf channel scanner ke liye)", "required": false },
+    "SESSION_STRING": { "description": "npm run gen-session se banao (sirf channel scanner ke liye)", "required": false }
   }
 }
