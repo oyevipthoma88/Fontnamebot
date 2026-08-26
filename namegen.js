@@ -206,6 +206,102 @@ function score(block, plain) {
 }
 
 // ───────────────────────────────────────────────
+// NAME VIBES — naam ke meaning ke hisaab se emojis
+// "moon" 🌝🌙, "king" 👑, "devil" 😈 ... — emoji tabhi lagta hai
+// jab naam me uska word ho; warna default theme frames use hote hain.
+// ───────────────────────────────────────────────
+const NAME_VIBES = [
+  { keys: ["moon", "chand", "chanda", "chandni", "luna", "qamar", "mah"], emojis: ["🌝", "🌙", "⭐", "✨"], theme: "spiritual" },
+  { keys: ["king", "raja", "raaj", "maharaja", "badshah", "sultan", "shah", "crown", "royal"], emojis: ["👑", "🦁", "⚜️", "💎"], theme: "royal" },
+  { keys: ["queen", "rani", "maharani", "begum", "princess", "princes"], emojis: ["👸", "👑", "🌸", "💎"], theme: "royal" },
+  { keys: ["prince", "rajkumar", "yuvraj"], emojis: ["🤴", "👑", "⚜️"], theme: "royal" },
+  { keys: ["love", "pyar", "pyaar", "dil", "ishq", "mohabbat", "heart", "sweetheart", "jigar"], emojis: ["❤️", "💖", "😘", "💞"], theme: "cute" },
+  { keys: ["devil", "shaitan", "demon", "ravan", "evil", "monster", "ghost", "bhoot", "dracula", "vampire"], emojis: ["😈", "🔥", "👹", "💀"], theme: "dark" },
+  { keys: ["angel", "farishta", "fairy", "pari"], emojis: ["😇", "👼", "✨", "🪽"], theme: "aesthetic" },
+  { keys: ["fire", "aag", "agni", "flame", "volcano"], emojis: ["🔥", "⚡", "💥"], theme: "gamer" },
+  { keys: ["sun", "suraj", "surya", "sunny", "sunrise"], emojis: ["☀️", "🌞", "🔥"], theme: "royal" },
+  { keys: ["star", "tara", "sitara", "rockstar", "superstar"], emojis: ["⭐", "🌟", "✨", "💫"], theme: "aesthetic" },
+  { keys: ["tiger", "sher", "lion", "simba", "baagh", "leo", "panther", "cheetah"], emojis: ["🐯", "🦁", "👑"], theme: "royal" },
+  { keys: ["dark", "kala", "black", "shadow", "night", "raat", "andhera", "midnight"], emojis: ["🖤", "🌑", "⚡"], theme: "dark" },
+  { keys: ["killer", "danger", "mafia", "don", "gangster", "hunter", "shikari", "assassin", "sniper"], emojis: ["☠️", "🔪", "💀", "🎯"], theme: "dark" },
+  { keys: ["music", "singer", "rock", "dj", "melody", "gaana", "rapper", "song"], emojis: ["🎵", "🎧", "🎶", "🎤"], theme: "gamer" },
+  { keys: ["gamer", "game", "gaming", "player", "legend", "hero", "noob"], emojis: ["🎮", "🏆", "⚡", "🔥"], theme: "gamer" },
+  { keys: ["cute", "baby", "baccha", "cutie", "golu", "teddy", "doll", "munchkin"], emojis: ["🧸", "🎀", "🍓", "🥰"], theme: "cute" },
+  { keys: ["shiv", "shiva", "mahadev", "bhole", "krishna", "kanha", "hanuman", "deva", "bhagwan", "mahakaal", "rudra"], emojis: ["🕉️", "🔱", "🙏", "🪔"], theme: "spiritual" },
+  { keys: ["rose", "gulab", "phool", "gul", "flower", "kamal", "lotus"], emojis: ["🌹", "🌸", "💐", "🌺"], theme: "aesthetic" },
+  { keys: ["wolf", "bhediya", "wolves"], emojis: ["🐺", "🌙", "🔥"], theme: "dark" },
+  { keys: ["dragon", "draco"], emojis: ["🐉", "🔥", "⚡"], theme: "gamer" },
+  { keys: ["diamond", "heera", "gold", "sona", "golden", "jewel"], emojis: ["💎", "👑", "✨"], theme: "royal" },
+  { keys: ["attitude", "nawab", "stylish", "dude"], emojis: ["😎", "🔥", "👑"], theme: "viral" },
+  { keys: ["army", "fauji", "soldier", "jawan", "commando", "military"], emojis: ["🪖", "🎖️", "🇮🇳", "⚔️"], theme: "gamer" },
+  { keys: ["sad", "dard", "alone", "lonely", "akela", "broken", "bewafa", "judai"], emojis: ["💔", "🥀", "🖤"], theme: "dark" },
+  { keys: ["butterfly", "titli"], emojis: ["🦋", "🌸", "✨"], theme: "aesthetic" },
+  { keys: ["rain", "barish", "saawan", "sawan", "monsoon"], emojis: ["🌧️", "☔", "💧"], theme: "aesthetic" },
+  { keys: ["honey", "shahad", "sweetie"], emojis: ["🍯", "🐝", "💛"], theme: "cute" },
+  { keys: ["spider"], emojis: ["🕷️", "🕸️", "🖤"], theme: "dark" },
+  { keys: ["snake", "naag", "nag", "cobra"], emojis: ["🐍", "👑", "🔥"], theme: "dark" },
+  { keys: ["skull"], emojis: ["💀", "☠️", "🖤"], theme: "dark" },
+  { keys: ["ninja", "samurai"], emojis: ["🥷", "⚔️", "🎭"], theme: "gamer" },
+  { keys: ["warrior", "yoddha", "fighter", "veer", "yodha", "kshatriya"], emojis: ["⚔️", "🛡️", "👑"], theme: "royal" },
+  { keys: ["magic", "jadoo", "wizard", "witch", "jadu"], emojis: ["🪄", "✨", "🔮"], theme: "aesthetic" },
+  { keys: ["light", "roshni", "deep", "diya", "deepak", "jot"], emojis: ["🪔", "✨", "💡"], theme: "spiritual" },
+  { keys: ["ocean", "samundar", "sagar", "sea", "wave"], emojis: ["🌊", "🐚", "💙"], theme: "aesthetic" },
+  { keys: ["snow", "ice", "barf", "winter", "frost"], emojis: ["❄️", "⛄", "🧊"], theme: "aesthetic" },
+  { keys: ["thunder", "bijli", "storm", "toofan", "tufan", "lightning"], emojis: ["⛈️", "🌩️", "⚡"], theme: "dark" },
+  { keys: ["coffee", "chai", "tea"], emojis: ["☕", "🍵", "✨"], theme: "minimal" },
+  { keys: ["cat", "billi", "kitten", "kitty"], emojis: ["🐱", "🐾", "🎀"], theme: "cute" },
+  { keys: ["panda"], emojis: ["🐼", "🎋", "🖤"], theme: "cute" },
+  { keys: ["bear", "bhalu"], emojis: ["🐻", "🧸", "🍯"], theme: "cute" },
+  { keys: ["eagle", "baj", "falcon", "hawk", "bird", "panchhi", "chidiya"], emojis: ["🦅", "🕊️", "⚡"], theme: "royal" },
+  { keys: ["rich", "amir", "money", "paisa", "crorepati", "lakh", "millionaire"], emojis: ["💰", "💸", "💎"], theme: "royal" },
+  { keys: ["dream", "sapna", "sapno", "dreamer"], emojis: ["💭", "✨", "🌙"], theme: "aesthetic" },
+  { keys: ["alien"], emojis: ["👽", "🛸", "🌌"], theme: "gamer" },
+  { keys: ["robot", "bot", "cyber"], emojis: ["🤖", "⚙️", "💠"], theme: "gamer" },
+  { keys: ["zombie"], emojis: ["🧟", "☠️", "🩸"], theme: "dark" },
+  { keys: ["mermaid", "jalpari"], emojis: ["🧜", "🌊", "🐚"], theme: "aesthetic" },
+  { keys: ["unicorn"], emojis: ["🦄", "🌈", "✨"], theme: "cute" },
+  { keys: ["rainbow"], emojis: ["🌈", "✨", "🎨"], theme: "aesthetic" },
+  { keys: ["mango", "aam"], emojis: ["🥭", "🍹", "🌴"], theme: "cute" },
+  { keys: ["strawberry", "cherry", "berries"], emojis: ["🍓", "🍒", "🎀"], theme: "cute" },
+  { keys: ["apple", "seb"], emojis: ["🍎", "🍏", "✨"], theme: "cute" },
+  { keys: ["candy", "chocolate", "choco", "toffee", "mithai"], emojis: ["🍬", "🍫", "🧁"], theme: "cute" },
+  { keys: ["cake", "birthday"], emojis: ["🎂", "🎉", "🎈"], theme: "cute" },
+  { keys: ["bullet", "bike", "rider", "biker", "racing", "racer"], emojis: ["🏍️", "💨", "🔥"], theme: "gamer" },
+  { keys: ["travel", "traveler", "ghumakkad", "safar", "pilot"], emojis: ["✈️", "🌍", "🧳"], theme: "minimal" },
+  { keys: ["camera", "photo", "photography", "lens"], emojis: ["📸", "🎞️", "✨"], theme: "aesthetic" },
+  { keys: ["dance", "dancer", "naach", "nach"], emojis: ["💃", "🕺", "🎵"], theme: "aesthetic" },
+  { keys: ["cricket", "cricketer"], emojis: ["🏏", "🏆", "🔥"], theme: "gamer" },
+  { keys: ["football", "soccer"], emojis: ["⚽", "🏆", "🔥"], theme: "gamer" },
+  { keys: ["gym", "body", "muscle", "fitness", "bodybuilder"], emojis: ["💪", "🏋️", "🔥"], theme: "gamer" },
+  { keys: ["hacker", "hacking", "tech", "coder", "developer"], emojis: ["💻", "🖥️", "⚡"], theme: "gamer" },
+  { keys: ["doctor", "doc", "mbbs"], emojis: ["🩺", "💊", "⚕️"], theme: "minimal" },
+  { keys: ["boss", "malik", "sarkar", "seth"], emojis: ["🫡", "👔", "💼"], theme: "royal" },
+  { keys: ["jatt", "jat"], emojis: ["🚜", "💪", "🦁"], theme: "royal" },
+  { keys: ["khan", "pathan", "khanzada"], emojis: ["🦅", "⚔️", "👑"], theme: "royal" },
+  { keys: ["rajput", "rajputana", "thakur"], emojis: ["⚔️", "👑", "🦁"], theme: "royal" },
+  { keys: ["guru", "master", "teacher"], emojis: ["🙏", "📿", "✨"], theme: "spiritual" },
+  { keys: ["smile", "happy", "khush", "khushi"], emojis: ["😊", "😄", "✨"], theme: "cute" },
+  { keys: ["ram", "krish", "radhe", "radha"], emojis: ["🚩", "🙏", "🪔"], theme: "spiritual" },
+];
+
+// Naam me se matching vibes dhundo (max 2). Whole-word match, ya 4+ letter
+// keyword ka compound match (jaise "moonlight" me "moon").
+function detectVibes(plain) {
+  const words = String(plain).toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
+  const found = [];
+  for (const v of NAME_VIBES) {
+    const hit = v.keys.some((k) =>
+      words.some((w) => w === k || (k.length >= 4 && w.includes(k)))
+    );
+    if (hit) {
+      found.push(v);
+      if (found.length >= 2) break;
+    }
+  }
+  return found;
+}
+
+// ───────────────────────────────────────────────
 // VIRAL ENGINE — "channel level" heavy decorated names
 // Style reference: top name-font channels (👑 frames, letter-spaced
 // greek/kayah/ethiopic lookalikes, halki combining-mark chhite, royal tails).
@@ -315,15 +411,32 @@ const VIRAL_LAYOUTS = [
 ];
 
 // N viral names — deterministic per naam, de-duped
-function viralNames(rawName, count = 8) {
+// vibes mile to 👑/🚩 ki jagah naam se related emojis lagte hain
+function viralNames(rawName, count = 8, vibes = []) {
   const plain = titleCase(cleanName(rawName)) || "Name";
   const r = rng(seedOf(plain.toLowerCase()) ^ 0x1f123bb5);
+  const hasVibe = vibes && vibes.length;
+  const crown = hasVibe ? vibes[0].emojis[0] : "👑";
+  const alt = hasVibe ? (vibes[0].emojis[1] || crown) : "🚩";
+  const frames = hasVibe ? [...new Set(vibes.flatMap((v) => v.emojis))] : VIRAL_FRAMES;
+  const heads = hasVibe ? VIRAL_HEADS.map((h) => h.split("👑").join(crown)) : VIRAL_HEADS;
+  const tails = hasVibe
+    ? VIRAL_TAILS.map((t) => t.split("👑").join(crown).split("🚩").join(alt))
+    : VIRAL_TAILS;
+  const layouts = [
+    (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
+    (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
+    (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
+    (n, rr) => `${crown} ${n}${pick(tails, rr)}`,
+    (n, rr) => `${pick(frames, rr)} ${n} ${pick(frames, rr)}`,
+    (n, rr) => `꧁ ${n} ꧂${pick(tails, rr)}`,
+  ];
   const out = [];
   const seen = new Set();
   let guard = 0;
   while (out.length < count && guard++ < count * 30) {
     const n = viralName(plain, r);
-    const block = pick(VIRAL_LAYOUTS, r)(n, r).trim();
+    const block = pick(layouts, r)(n, r).trim();
     if (!block || seen.has(block)) continue;
     seen.add(block);
     out.push(block);
@@ -343,13 +456,26 @@ function premiumNames(rawName, count = 12, opts = {}) {
 
   const candidates = [];
   const seen = new Set();
-  const themes = opts.theme ? THEMES.filter((t) => t.id === opts.theme) : THEMES;
+  let themes = opts.theme ? THEMES.filter((t) => t.id === opts.theme) : THEMES;
+
+  // Naam se related emojis (moon 🌝, king 👑 ...) — theme frames ke aage laga do
+  // aur us vibe ke theme ke candidates ko bonus do
+  const vibes = detectVibes(plain);
+  let vibeEmojis = [];
+  let vibeTheme = null;
+  if (vibes.length) {
+    vibeEmojis = [...new Set(vibes.flatMap((v) => v.emojis))];
+    vibeTheme = vibes[0].theme;
+    themes = themes.map((t) =>
+      t.viral ? t : Object.assign({}, t, { frames: vibeEmojis.concat(t.frames).slice(0, 7) })
+    );
+  }
 
   // sabhi theme × font × layout combos try karo, phir best chuno
   for (const theme of themes) {
     // Viral theme apna glyph engine use karti hai (channel-level heavy style)
     if (theme.viral) {
-      for (const block of viralNames(plain, 12)) {
+      for (const block of viralNames(plain, 12, vibes)) {
         if (seen.has(block)) continue;
         seen.add(block);
         candidates.push({ block, theme: theme.id, font: "Viral Mix", s: 128 + r() * 8 });
@@ -365,7 +491,13 @@ function premiumNames(rawName, count = 12, opts = {}) {
           const block = LAYOUTS[li](name, theme, r).trim();
           if (!block || seen.has(block)) continue;
           seen.add(block);
-          candidates.push({ block, theme: theme.id, font, s: score(block, plain) });
+          let s = score(block, plain);
+          // vibe bonus: naam se related emoji ho to upar lao
+          if (vibeEmojis.length) {
+            if (vibeEmojis.some((e) => block.includes(e))) s += 14;
+            if (theme.id === vibeTheme) s += 6;
+          }
+          candidates.push({ block, theme: theme.id, font, s });
         }
       }
     }
@@ -400,4 +532,4 @@ function themedNames(rawName, themeId, count = 8) {
 
 const themeIds = () => THEMES.map((t) => ({ id: t.id, icon: t.frames[0] }));
 
-module.exports = { premiumNames, themedNames, themeIds, cleanName, titleCase, score, usableFonts, viralNames };
+module.exports = { premiumNames, themedNames, themeIds, cleanName, titleCase, score, usableFonts, viralNames, detectVibes, NAME_VIBES };
