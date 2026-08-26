@@ -7,7 +7,9 @@ Telegram bot jo kisi bhi naam ko **65+ stylish fonts** aur **decorated fancy nam
 ## Features
 - **65+ font styles**: bold, italic, script, fraktur, double-struck, monospace, circled, squared, fullwidth, small caps, superscript/subscript, greek/cyrillic/tribal/runic/asian/thai mix, currency, flag letters, strike, underline, overline, wavy, heartify, starify + combos
 - **Direct delivery**: naam bhejo → 12-15 decorated names **ek-ek alag message** me, sirf naam + `#naam@FontsxWorld` watermark. Data me naam na mile to engine khud bana deta hai.
-- **Premium name engine (v3)** — `namegen.js`: font coverage check (adhoore/box fonts reject), theme-matched ornament pairs (royal / aesthetic / dark / cute / gamer / spiritual / minimal), quality scoring (length, ornament ratio, symmetry, no zalgo) aur variety filter — sirf **top-ranked** names bhejta hai. Theme buttons se ek hi style ke aur names milte hain.
+- **Viral engine (channel-level)** — top name-font channels jaisi heavy decorated styles: 👑 crown frames, letter-spaced rare glyphs (𝛂 𑜼 ꪱ ༏ 𒁹…), royal tails (↝ 🚩, ⏤⃝ ⚡, ᡣ𐭩𝆆…) aur halki combining-mark chhite. Har naam ke top results me viral styles sabse upar aate hain, aur **👑 Viral** theme button se sirf viral names milte hain.
+- **Premium name engine (v3)** — `namegen.js`: font coverage check (adhoore/box fonts reject), theme-matched ornament pairs (royal / aesthetic / dark / cute / gamer / spiritual / minimal / viral), quality scoring (length, ornament ratio, symmetry, no zalgo) aur variety filter — sirf **top-ranked** names bhejta hai. Theme buttons se ek hi style ke aur names milte hain.
+- **Personalized** — koi hardcoded example naam nahi: welcome, tutorial, demo aur `/fonts` `/fancy` usage sab me **user ka apna Telegram naam** use hota hai.
 - **👑 Owner button aur ⚙️ Owner Panel alag-alag** — `👑 Owner` dabane par owner ki **profile seedha khulti hai** (`OWNER_USERNAME` ya numeric id se). `⚙️ Owner Panel` sirf owner ko dikhta hai:
   - 📊 **Bot Stats** — total users, requests, font styles, collected names, ornaments, scanned channels, uptime
   - 📡 **Scan Name Channel** — chat id / @username bhejo (ek sath multiple, space/comma se), us channel ke saare name fonts scan ho ke add ho jayenge. **Duplicate names aur pehle scanned channels auto-skip.** Kisi channel ka naam/@username/link/watermark store nahi hota — sirf name styles aur ornaments.
@@ -21,8 +23,8 @@ Telegram bot jo kisi bhi naam ko **65+ stylish fonts** aur **decorated fancy nam
 | Command | Kaam |
 | --- | --- |
 | `/start` | Bot start + buttons |
-| `/fancy Kabir` | 12-15 decorated names, ek-ek msg me |
-| `/fonts Kabir Singh` | 65+ font styles (pagination) |
+| `/fancy <apna naam>` | 12 decorated names, ek-ek msg me (viral + premium) |
+| `/fonts <apna naam>` | 65+ font styles (pagination) |
 | `/tutorial` | Use karne ka tarika |
 | `/help` | Madad |
 | `/owner` | Owner ki profile (sabke liye) |
