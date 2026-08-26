@@ -373,7 +373,18 @@ const VIRAL_TAILS = [
   " ࡃ 🍔 ࿐",
   " ⏤⃝ 🇦🇱",
 ];
-const VIRAL_FRAMES = ["👑", "💎", "🔥", "🚩", "⚡", "🖤"];
+// Channel posts me use hone wale saare frame emojis
+const VIRAL_FRAMES = ["👑", "💎", "🔥", "🚩", "⚡", "🖤", "🌷", "🌹", "💗", "🎀", "⭐️", "🌟", "🍄", "💘", "🥂", "🔪", "🌈", "🥰", "✧", "💞", "🎵", "🤍", "𖣠", "°", "."];
+
+// Channel ke quote/bracket styles (name ke aas-paas ke jode)
+const VIRAL_QUOTES = [
+  ["˹ ", " ˼"],       // - ˹ 𝐌 𝐄 𝐄 𝐍 𝚨 ˼
+  ["❛ ", " ❜"],       // 𝁘❛ 𝐑 𝚶 𝚮 𝚰 𝚻 ❜
+  ["𓆰 ", " 𓆪"],      // ᯓ̽𓆰 ... 𓆪
+  ["𓆩 ", "𓆪ꪾ"],      // 𓆩 𝘿𝘼𝙄𝙇𝙔... 𓆪ꪾ
+  ["ꠂ", "𓆪"],        // ꠂ𝐑𝐔𝐋𝐀𝐑𝆺𝅥𓆪
+];
+const VIRAL_QTAILS = [" ‹⤹🪽", " ‹⤹🤍", " ‹⤹🦋", " ›᭠", " 🜲 ˹ 🚩 ˼", "⤹🤍𓂃.", " ‹⤹🥂", " ››"];
 
 // Ek word ko viral glyphs me badlo — token-wise (combining mark kabhi alag nahi hota)
 function viralWordTokens(word, r, baseMap) {
@@ -391,9 +402,28 @@ function viralWordTokens(word, r, baseMap) {
   });
 }
 
+// Spaced caps mode: 𝐌 𝐄 𝐄 𝐍 𝚨 / 𝗚𝝞𝗥𝗟𝗙𝗥𝝞𝝣𝝢𝗗 — har letter bold math font, space ke saath
+const CAPS_FONTS = ["Bold Serif", "Sans Bold", "Sans Bold Italic", "Bold Italic Serif", "Monospace", "Double Struck"];
+function spacedCaps(word, r) {
+  const font = MAPS[pick(CAPS_FONTS, r)];
+  const mixed = r() < 0.35; // kuch letters greek-bold mix (𝗚𝝞𝗥𝗟 style)
+  return cp(word).map((ch) => {
+    if (!/[A-Za-z]/.test(ch)) return ch;
+    const up = ch.toUpperCase();
+    if (mixed && r() < 0.35) {
+      const set = VIRAL_SET[up.toLowerCase()];
+      if (set) return pick(set, r).toUpperCase() === pick(set, r) ? pick(set, r) : (font[up] || up);
+    }
+    return font[up] || up;
+  }).join(" ");
+}
+
 // Poora naam viral style me (spaced ya joined)
-function viralName(plain, r) {
+function viralName(plain, r, mode) {
   const words = plain.split(" ").filter(Boolean);
+  if (mode === "caps") {
+    return words.map((w) => spacedCaps(w, r)).join("   ");
+  }
   const baseMap = MAPS[pick(VIRAL_BASES, r)];
   const spaced = r() < 0.5;
   const glue = pick([" ↝ ", " ⏤⃝ ", " ･ ", " × ", " "], r);
@@ -432,12 +462,18 @@ function viralNames(rawName, count = 8, vibes = []) {
     (n, rr) => VIRAL_BLOCK(n, `─   `, pick(tails, rr), crown),
     (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
     (n, rr) => `${pick(frames, rr)} ${n} ${pick(frames, rr)}`,
+    // Channel quote/bracket blocks: ˹ 𝐍 𝐀 𝐌 𝐄 ˼ ‹⤹🪽 / 𓆰 ... 𓆪 ›᭠
+    (n, rr) => { const [o, c] = pick(VIRAL_QUOTES, rr); const f = pick(frames, rr); return VIRAL_BLOCK(`${o}${n}${c}`, "", pick(VIRAL_QTAILS, rr), f); },
+    (n, rr) => { const [o, c] = pick(VIRAL_QUOTES, rr); const f = pick(frames, rr); return VIRAL_BLOCK(`${o}${n}${c}`, "", pick(VIRAL_QTAILS, rr), f); },
+    (n, rr) => { const [o, c] = pick(VIRAL_QUOTES, rr); return `- ${o}${n}${c}${pick(VIRAL_QTAILS, rr)}`; },
   ];
   const out = [];
   const seen = new Set();
   let guard = 0;
   while (out.length < count && guard++ < count * 30) {
-    const n = viralName(plain, r);
+    // har 3rd/4th result spaced-caps mode (𝐌 𝐄 𝐄 𝐍 𝚨 style) — channel variety
+    const mode = out.length % 4 >= 2 ? "caps" : "viral";
+    const n = viralName(plain, r, mode);
     const block = pick(layouts, r)(n, r).trim();
     if (!block || seen.has(block)) continue;
     seen.add(block);
