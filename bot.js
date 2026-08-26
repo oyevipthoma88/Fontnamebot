@@ -17,7 +17,10 @@ if (!OWNER_ID) console.warn("⚠️  OWNER_ID set nahi hai — Owner Panel kaam 
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const lastText = new Map(); // chatId -> last requested name
-const pendingScan = new Map(); // ownerId -> { force: boolean }
+const pendingScan = new Map(); // ownerId -> { force: boolean, at: number }
+const SCAN_INPUT_TTL = 5 * 60 * 1000; // 5 min ke baad pending scan khud expire
+const looksLikeChannelId = (t) =>
+  t.split(/[\s,]+/).filter(Boolean).every((x) => /^!?(@?[A-Za-z][A-Za-z0-9_]{3,31}|-?\d{5,})$/.test(x));
 const PER_PAGE = 12;
 
 // Startup pe collected ornament templates engine me merge kar do
@@ -292,7 +295,7 @@ bot.onText(/^\/scan(?:\s+([\s\S]+))?/, async (msg, m) => {
   if (!isOwner(msg.from.id)) return;
   const ids = (m[1] || "").split(/[\s,]+/).filter(Boolean);
   if (!ids.length) {
-    pendingScan.set(msg.from.id, { force: false });
+    pendingScan.set(msg.from.id, { force: false, at: Date.now() });
     return bot.sendMessage(
       msg.chat.id,
       `📡 Chat id ya @username bhejo — ek ya ek se zyada (space/comma se alag).\nForce rescan ke liye <code>!</code> prefix lagao (jaise <code>!@somechannel</code>).\nCancel ke liye: <code>cancel</code>`,
@@ -381,10 +384,18 @@ bot.on("message", async (msg) => {
       pendingScan.delete(msg.from.id);
       return bot.sendMessage(msg.chat.id, "❎ Scan cancel ho gaya.", { reply_markup: panelKeyboard() });
     }
-    const { force } = pendingScan.get(msg.from.id);
-    pendingScan.delete(msg.from.id);
-    const ids = t.split(/[\s,]+/).filter(Boolean);
-    return runScan(msg.chat.id, ids, force);
+    const p = pendingScan.get(msg.from.id);
+    // TTL khatam → normal name request ki tarah treat karo (owner phasta nahi)
+    if (Date.now() - (p.at || 0) > SCAN_INPUT_TTL) {
+      pendingScan.delete(msg.from.id);
+    } else if (!looksLikeChannelId(t)) {
+      // ye channel id/@username jaisa nahi lagta → user ka naam samjho
+      pendingScan.delete(msg.from.id);
+      await bot.sendMessage(msg.chat.id, "ℹ️ Ye channel id jaisa nahi laga, isliye scan cancel karke naam bana raha hoon.");
+    } else {
+      pendingScan.delete(msg.from.id);
+      return runScan(msg.chat.id, t.split(/[\s,]+/).filter(Boolean), p.force);
+    }
   }
 
   if (t.length > 40) return bot.sendMessage(msg.chat.id, "😅 Naam thoda chhota bhejo (max 40 characters).");
@@ -400,6 +411,9 @@ bot.on("message", async (msg) => {
 
 // ── Callbacks ──
 bot.on("callback_query", async (q) => {
+  if (!q.message || !q.message.chat) {
+    return bot.answerCallbackQuery(q.id).catch(() => {});
+  }
   const chatId = q.message.chat.id;
   const data = q.data || "";
   const saved = lastText.get(chatId) || "Kabir Singh";
@@ -457,7 +471,7 @@ bot.on("callback_query", async (q) => {
     } else if (data === "o:stats" && isOwner(q.from.id)) {
       await bot.sendMessage(chatId, statsText(), { parse_mode: "HTML", reply_markup: panelKeyboard() });
     } else if ((data === "o:scan" || data === "o:rescan") && isOwner(q.from.id)) {
-      pendingScan.set(q.from.id, { force: data === "o:rescan" });
+      pendingScan.set(q.from.id, { force: data === "o:rescan", at: Date.now() });
       await bot.sendMessage(
         chatId,
         `📡 Chat id ya @username bhejo — ek ya ek se zyada (space/comma se alag).\n` +

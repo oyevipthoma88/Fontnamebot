@@ -160,8 +160,13 @@ function styleList(text) {
     ["Bold Italic Serif", "Diamond Join"],
   ];
   for (const [m, w] of combos) {
-    const wrap = WRAPPERS.find((x) => x[0] === w)[1];
-    out.push([`${m} + ${w}`, wrap(applyMap(MAPS[m], text))]);
+    // guard: MAPS/WRAPPERS me naam rename ho jaye to crash na ho
+    const wrapEntry = WRAPPERS.find((x) => x[0] === w);
+    if (!MAPS[m] || !wrapEntry) {
+      console.warn(`combo skip: "${m} + ${w}" (missing map/wrapper)`);
+      continue;
+    }
+    out.push([`${m} + ${w}`, wrapEntry[1](applyMap(MAPS[m], text))]);
   }
   return out;
 }
@@ -321,8 +326,10 @@ function decoratedNames(text, tagLine = "", count = 12) {
   const r = rng(seedOf(text) ^ 0x9e3779b9);
   const seen = new Set();
   const out = [];
+  // chhote inputs par collisions zyada hote hain → guard bada rakho
   let guard = 0;
-  while (out.length < count && guard++ < count * 30) {
+  const maxTries = Math.max(count * 30, 400);
+  while (out.length < count && guard++ < maxTries) {
     const mode = out.length % 3;
     let name;
     if (mode === 0) name = mixName(text, r);
