@@ -442,7 +442,12 @@ function spacedCaps(word, r) {
     const up = ch.toUpperCase();
     if (mixed && r() < 0.35) {
       const set = VIRAL_SET[up.toLowerCase()];
-      if (set) return pick(set, r).toUpperCase() === pick(set, r) ? pick(set, r) : (font[up] || up);
+      if (set) {
+        // FIX: pehle 3 baar pick() hota tha (RNG 3x consume + har baar alag glyph
+        // compare hota tha) — ab ek hi glyph pick karke check karte hain.
+        const g = pick(set, r);
+        return g.toUpperCase() === g ? g : (font[up] || up);
+      }
     }
     return font[up] || up;
   }).join(" ");
@@ -573,14 +578,22 @@ function premiumNames(rawName, count = 12, opts = {}) {
 
   candidates.sort((x, y) => y.s - x.s);
 
-  // Variety: ek hi theme/font ke 3 se zyada results na aaye
+  // Variety: normal theme/font ke 2 se zyada results na aaye.
+  // FIX: "viral" theme (channel-level premium style, @FontsxWorld jaisi) ko
+  // generic 3-cap me band rakha tha — isliye top-12 me sirf 2-3 premium blocks
+  // aate the aur baaki plain theme names se bhar jate the. Ab viral ko
+  // zyada slots milte hain (channel ke hisaab se = premium majority),
+  // baaki themes sirf variety ke liye 1-2 slots.
+  const VIRAL_CAP = Math.max(3, Math.ceil(count * 0.6)); // ~60% viral premium
+  const OTHER_CAP = 2;
   const out = [];
   const themeCount = {};
   const fontCount = {};
   for (const c of candidates) {
     if (out.length >= count) break;
-    if ((themeCount[c.theme] || 0) >= 3) continue;
-    if ((fontCount[c.font] || 0) >= 3) continue;
+    const cap = c.theme === "viral" ? VIRAL_CAP : OTHER_CAP;
+    if ((themeCount[c.theme] || 0) >= cap) continue;
+    if (c.font !== "Viral Mix" && (fontCount[c.font] || 0) >= 2) continue;
     themeCount[c.theme] = (themeCount[c.theme] || 0) + 1;
     fontCount[c.font] = (fontCount[c.font] || 0) + 1;
     out.push(c);
