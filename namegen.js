@@ -309,36 +309,36 @@ function detectVibes(plain) {
 
 // Per-letter rare lookalike glyphs (lowercase letters; capitals base font me rehte hain)
 const VIRAL_SET = {
-  a: ["𝛂", "𝜶", "𑜼", "ꓛ", "ᧁ"],
-  b: ["𝜷", "ᑲ", "𝛃"],
-  c: ["𝚌", "ᥴ", "૬", "𝑐"],
-  d: ["ᕲ", "𝚍", "ծ", "∂"],
-  e: ["𝛆", "𝜺", "ꫀ", "є"],
-  f: ["⨍", "𝑓", "ʄ", "ƒ"],
-  g: ["𝑔", "ɢ", "ᶃ", "ց"],
-  h: ["ꪱ", "𝚑", "հ", "𑜼"],
-  i: ["༏", "𝜾", "ᛧ", "¡", "ı"],
-  j: ["𝙹", "ʝ", "𝑗"],
-  k: ["𝛋", "ҡ", "ƙ", "ᴋ"],
-  l: ["𒁹", "𝚕", "ℓ", "ʆ"],
-  m: ["𝛍", "ⲙ", "ო", "ᴍ"],
-  n: ["𝜼", "𝛈", "န", "ท"],
-  o: ["𝛐", "𝚘", "ꭷ", "໐"],
-  p: ["ꓕ", "𐓙", "ρ", "ᴘ"],
-  q: ["𝑞", "զ", "ǫ"],
-  r: ["ɤ", "᱂", "𝚛", "ⲅ"],
-  s: ["န", "𝜎", "ร", "ꇙ"],
-  t: ["τ", "𝜏", "𐑄", "ᴛ"],
-  u: ["𝛖", "υ", "ຟ", "ᴜ"],
-  v: ["𝜈", "ѵ", "ν", "ᴠ"],
-  w: ["𝛚", "ω", "ꝃ", "ᴡ"],
-  x: ["𝑥", "Ӽ", "᥊"],
-  y: ["𝛄", "ყ", "𐌦", "ʏ"],
-  z: ["𝑧", "չ", "ᴢ"],
+  a: ["𝛂", "𝜶", "𑜼", "ꓛ", "ᧁ", "𝛼", "ᗩ", "ค", "α", "𝒂"],
+  b: ["𝜷", "ᑲ", "𝛃", "ᗷ", "ᖇ", "๒", "ც"],
+  c: ["𝚌", "ᥴ", "૬", "𝑐", "ᴄ", "ς", "ƈ", "ᶜ"],
+  d: ["ᕲ", "𝚍", "ծ", "∂", "ᴅ", "ძ", "𝚍", "ɗ"],
+  e: ["𝛆", "𝜺", "ꫀ", "є", "ᴇ", "ε", "૯", "𝘦"],
+  f: ["⨍", "𝑓", "ʄ", "ƒ", "ꜰ", "ʆ", "ϝ"],
+  g: ["𝑔", "ɢ", "ᶃ", "ց", "ɢ", "ﻝ", "𝘨", "ǥ"],
+  h: ["ꪱ", "𝚑", "հ", "𑜼", "ʜ", "ɦ", "ん", "𝘩"],
+  i: ["༏", "𝜾", "ᛧ", "¡", "ı", "ɪ", "ͥ", "𝘪", "ï"],
+  j: ["𝙹", "ʝ", "𝑗", "ᴊ", "յ", "𝘫"],
+  k: ["𝛋", "ҡ", "ƙ", "ᴋ", "κ", "ᵏ", "𝘬"],
+  l: ["𒁹", "𝚕", "ℓ", "ʆ", "ʟ", "ᥣ", "𝘭"],
+  m: ["𝛍", "ⲙ", "ო", "ᴍ", "м", "ɱ", "๓", "𝘮"],
+  n: ["𝜼", "𝛈", "န", "ท", "ɴ", "ภ", "ռ", "𝘯"],
+  o: ["𝛐", "𝚘", "ꭷ", "໐", "ᴏ", "σ", "૦", "𝘰"],
+  p: ["ꓕ", "𐓙", "ρ", "ᴘ", "թ", "ƿ", "𝘱"],
+  q: ["𝑞", "զ", "ǫ", "𝑸", "ҩ", "𝘲"],
+  r: ["ɤ", "᱂", "𝚛", "ⲅ", "ʀ", "я", "𝘳", "ɾ"],
+  s: ["န", "𝜎", "ร", "ꇙ", "s", "ѕ", "ʂ", "𝘴"],
+  t: ["τ", "𝜏", "𐑄", "ᴛ", "ɬ", "੮", "𝘵"],
+  u: ["𝛖", "υ", "ຟ", "ᴜ", "ų", "ย", "𝘶"],
+  v: ["𝜈", "ѵ", "ν", "ᴠ", "ง", "ν", "𝘷"],
+  w: ["𝛚", "ω", "ꝃ", "ᴡ", "ա", "ฝ", "𝘸"],
+  x: ["𝑥", "Ӽ", "᥊", "Ӿ", "๏", "𝘹"],
+  y: ["𝛄", "ყ", "𐌦", "ʏ", "ץ", "𝘆"],
+  z: ["𝑧", "չ", "ᴢ", "չ", "ʐ", "𝘇"],
 };
 
 // Halki combining marks (zitna channel use karta hai — render friendly)
-const VIRAL_MARKS = ["̓", "፟", "͛", "̙", "̴", "̥", "̎"];
+const VIRAL_MARKS = ["̓", "፟", "͛", "̙", "̴", "̥", "̎", "꯭", "ᷧ", "ִ", "໋", "᭄"];
 // Capital letters ke liye base fonts
 const VIRAL_BASES = ["Sans Bold Italic", "Bold Italic Serif", "Bold Serif", "Sans Bold"];
 
@@ -355,6 +355,17 @@ const VIRAL_HEADS = [
   "🧿 𝄄༐𝄄 ⋆─┼༢། ",
   "° 𝂊𝃳Ⲙ᧘ᘫ ꧊",
   "𓂃ᷧ ᷟ  ",
+  // Aur top font channels ke heads (style ref: FontsWall/AttitudeNames type)
+  "•─╼⃝⃝⃟ ",
+  "★彡 ",
+  "─━━━━━━⊱ ",
+  "•❅──────✧❅✦❅──────• ",
+  "˗ˏˋ ꒰ ♡ ꒱ ˎˊ˗ ",
+  "•°•°•°• ",
+  "═══❁⃟✿⃟⃝═══ ",
+  "ᯓᡣ𐭩 ",
+  "˚₊· ͟͟͞➳❥ ",
+  "◦•●◉✿ ",
 ];
 // Channel tails: deco + ek emoji (vibe/flag) — frame emoji block ke bahar aata hai
 const VIRAL_TAILS = [
@@ -394,6 +405,20 @@ const VIRAL_TAILS = [
   " ➺♡゙»",
   " ‹𝟑 ⤹",
   " 𝄢 ⸙",
+  // Aur premium channels ke tails
+  " ⸙",
+  " 𓆪ꪾ",
+  " ꯭𓆪",
+  " 🪽",
+  " ‹𝟑",
+  " ⚡࿐",
+  " ×͜×",
+  " ᥫ᭡",
+  " ꗃ",
+  " ᯓ★",
+  " ˚⊹♡",
+  " 彡★",
+  " ⊱━━━━━━⊰",
 ];
 // Channel posts me use hone wale saare frame emojis (full scan 2026-08, ~1500 posts)
 const VIRAL_FRAMES = ["👑", "💎", "🔥", "🚩", "⚡", "🖤", "🌷", "🌹", "💗", "🎀", "⭐️", "🌟", "🍄", "💘", "🥂", "🔪", "🌈", "🥰", "✧", "💞", "🎵", "🤍", "𖣠", "°", ".",
@@ -412,9 +437,22 @@ const VIRAL_QUOTES = [
   ["◄⏤", "𓆪"],        // ◄⏤꯭𓆩...⎯✘"𓆩᪵
   ["𝁤❛. ", " ˼"],      // 𝁤❛. 𝐂 ͱ꧊̵ ꧊᳸ ᴋ ʊ ˼
   ["⌯ ", " -𓅫ꪳ͢"],     // ⌯ 𝐒 ⴕ ꧊᱂ ⋏ ꪀ໋𝅾 ԍ 𝛆 -𓅫ꪳ͢
+  // Aur premium channels ke bracket jode
+  ["꧁☆ ", " ☆꧂"],
+  ["꧁༺ ", " ༻꧂"],
+  ["𓆩♡ ", " ♡𓆪"],
+  ["•❅• ", " •❅•"],
+  ["✿.｡.:* ", " *.:｡.✿"],
+  ["⋆˚✿˖° ", " °˖✿˚⋆"],
+  ["⫷ ", " ⫸"],
+  ["ᯓ ", " ᯓ"],
+  ["˹ ", " ˼"],
+  ["『 ", " 』"],
+  ["✧･ﾟ: * ", " *:･ﾟ✧"],
 ];
 const VIRAL_QTAILS = [" ‹⤹🪽", " ‹⤹🤍", " ‹⤹🦋", " ›᭠", " 🜲 ˹ 🚩 ˼", "⤹🤍𓂃.", " ‹⤹🥂", " ››",
-  " ➛⦁ꪳ", "˼ ݁", " •_ ♡┊", " ꯭༎᭄꯭ 𝅃꯭᳚", " ⤹🦋", " ｡˚𖡋", " 𓆪̥°"];
+  " ➛⦁ꪳ", "˼ ݁", " •_ ♡┊", " ꯭༎᭄꯭ 𝅃꯭᳚", " ⤹🦋", " ｡˚𖡋", " 𓆪̥°",
+  " ⸙", " ⚡࿐", " ‹𝟑", " 🜲", " 𓂃♔", " ᥫ᭡", " ×͜×", " ˚⊹♡"];
 
 // Ek word ko viral glyphs me badlo — token-wise (combining mark kabhi alag nahi hota)
 function viralWordTokens(word, r, baseMap) {
@@ -434,6 +472,17 @@ function viralWordTokens(word, r, baseMap) {
 
 // Spaced caps mode: 𝐌 𝐄 𝐄 𝐍 𝚨 / 𝗚𝝞𝗥𝗟𝗙𝗥𝝞𝝣𝝢𝗗 — har letter bold math font, space ke saath
 const CAPS_FONTS = ["Bold Serif", "Sans Bold", "Sans Bold Italic", "Bold Italic Serif", "Monospace", "Double Struck"];
+// Spaced small-caps / script modes (ᴛɪɴʏ style aur 𝒸𝓊𝓇𝓈𝒾𝓋𝑒 style channels)
+const TINY_FONTS = ["Small Caps", "Monospace"];
+const SCRIPT_FONTS = ["Script", "Bold Script", "Italic Serif", "Bold Italic Serif"];
+function spacedFont(word, r, fontNames, upper) {
+  const font = MAPS[pick(fontNames, r)];
+  return cp(word).map((ch) => {
+    if (!/[A-Za-z]/.test(ch)) return ch;
+    const src = upper ? ch.toUpperCase() : ch.toLowerCase();
+    return font[src] || ch;
+  }).join(" ");
+}
 function spacedCaps(word, r) {
   const font = MAPS[pick(CAPS_FONTS, r)];
   const mixed = r() < 0.35; // kuch letters greek-bold mix (𝗚𝝞𝗥𝗟 style)
@@ -458,6 +507,12 @@ function viralName(plain, r, mode) {
   const words = plain.split(" ").filter(Boolean);
   if (mode === "caps") {
     return words.map((w) => spacedCaps(w, r)).join("   ");
+  }
+  if (mode === "tiny") {
+    return words.map((w) => spacedFont(w, r, TINY_FONTS, false)).join("   ");
+  }
+  if (mode === "script") {
+    return words.map((w) => spacedFont(w, r, SCRIPT_FONTS, false)).join("   ");
   }
   const baseMap = MAPS[pick(VIRAL_BASES, r)];
   const spaced = r() < 0.5;
@@ -505,9 +560,10 @@ function viralNames(rawName, count = 8, vibes = []) {
   const out = [];
   const seen = new Set();
   let guard = 0;
+  // Channel jaisi variety: glyph-mix, spaced-caps (𝐌 𝐄 𝐄 𝐍 𝚨), tiny (ᴛɪɴʏ), script (𝒸𝓊𝓇𝓈𝒾𝓋𝑒)
+  const MODE_CYCLE = ["viral", "caps", "viral", "tiny", "viral", "script", "viral", "caps"];
   while (out.length < count && guard++ < count * 30) {
-    // har 3rd/4th result spaced-caps mode (𝐌 𝐄 𝐄 𝐍 𝚨 style) — channel variety
-    const mode = out.length % 4 >= 2 ? "caps" : "viral";
+    const mode = MODE_CYCLE[out.length % MODE_CYCLE.length];
     const n = viralName(plain, r, mode);
     const block = pick(layouts, r)(n, r).trim();
     if (!block || seen.has(block)) continue;
@@ -517,10 +573,19 @@ function viralNames(rawName, count = 8, vibes = []) {
   return out;
 }
 
-// ── MAIN: best decorated names ──
+// ── MAIN: 100% channel-level viral names ──
+// Default output ab PURA viral engine se aata hai (channel-level premium
+// blocks) — plain theme names sirf theme buttons ke liye bache hain.
+function premiumNames(rawName, count = 12, opts = {}) {
+  if (opts.theme && opts.theme !== "viral") return themeNames(rawName, count, opts);
+  const plain = titleCase(cleanName(rawName)) || "Name";
+  return viralNames(plain, count, detectVibes(plain));
+}
+
+// ── theme engine: classic font+theme names (theme buttons ke liye) ──
 // Deterministic: ek naam ke liye har baar same top results (users ko consistent
 // quality milti hai), par har naam ka apna unique flavour.
-function premiumNames(rawName, count = 12, opts = {}) {
+function themeNames(rawName, count = 12, opts = {}) {
   const plain = titleCase(cleanName(rawName)) || "Name";
   const words = plain.split(" ").filter(Boolean);
   const r = rng(seedOf(plain.toLowerCase()) ^ 0x5bf03635);
@@ -608,7 +673,11 @@ function premiumNames(rawName, count = 12, opts = {}) {
 
 // Ek theme ke best names (theme buttons ke liye)
 function themedNames(rawName, themeId, count = 8) {
-  return premiumNames(rawName, count, { theme: themeId });
+  if (themeId === "viral") {
+    const plain = titleCase(cleanName(rawName)) || "Name";
+    return viralNames(plain, count, detectVibes(plain));
+  }
+  return themeNames(rawName, count, { theme: themeId });
 }
 
 const themeIds = () => THEMES.map((t) => ({ id: t.id, icon: t.frames[0] }));
