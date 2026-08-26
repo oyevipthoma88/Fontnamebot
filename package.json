@@ -1,10 +1,17 @@
 {
   "name": "fontnamebot",
-  "version": "1.0.0",
-  "description": "Telegram bot that turns any name into 50+ fancy fonts and decorated stylish names",
+  "version": "2.0.0",
+  "description": "Telegram bot that turns any name into 65+ fancy fonts and decorated stylish names, with owner panel and channel scanner",
   "main": "bot.js",
-  "scripts": { "start": "node bot.js" },
+  "scripts": {
+    "start": "node bot.js",
+    "gen-session": "node gen-session.js"
+  },
   "engines": { "node": "20.x" },
-  "dependencies": { "node-telegram-bot-api": "^0.66.0" },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "telegram": "^2.26.22",
+    "input": "^1.0.1"
+  },
   "license": "MIT"
 }
