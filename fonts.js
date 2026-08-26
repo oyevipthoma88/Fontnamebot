@@ -317,7 +317,8 @@ const LAYOUTS = [
 ];
 
 function hashTag(text, channel) {
-  const slug = text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  let slug = text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  if (!slug) slug = "style"; // non-latin naam pe "#@channel" na bane
   return channel ? `#${slug}@${channel}` : `#${slug}`;
 }
 
