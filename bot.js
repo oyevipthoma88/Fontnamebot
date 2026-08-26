@@ -2,6 +2,8 @@ const TelegramBot = require("node-telegram-bot-api");
 const { styleList, decoratedNames, hashTag, extendTemplates } = require("./fonts");
 const store = require("./store");
 const scanner = require("./scanner");
+const accounts = require("./accounts");
+const namegen = require("./namegen");
 
 const TOKEN = process.env.BOT_TOKEN;
 const CHANNEL = process.env.CHANNEL_USERNAME || "FontsxWorld";
@@ -41,6 +43,13 @@ async function sendSafe(chatId, text, opts = {}) {
 }
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Owner ki profile ka direct link (username ho to @username, warna numeric id)
+function ownerProfileUrl() {
+  if (OWNER_USERNAME) return "https://t.me/" + OWNER_USERNAME;
+  if (OWNER_ID) return "tg://user?id=" + OWNER_ID;
+  return null;
+}
+
 function startKeyboard(uid) {
   const rows = [
     [{ text: "📖 Tutorial", callback_data: "tutorial" }],
@@ -49,8 +58,15 @@ function startKeyboard(uid) {
       { text: "👑 Fancy Names", callback_data: "demo_decor" },
     ],
     [{ text: "📣 Updates Channel", url: "https://t.me/" + CHANNEL }],
-    [{ text: "👑 Owner", callback_data: "owner" }, { text: "❓ Help", callback_data: "help" }],
   ];
+  // 👑 Owner  = owner ki profile seedha khulti hai (sabke liye)
+  const url = ownerProfileUrl();
+  rows.push([
+    url ? { text: "👑 Owner", url } : { text: "👑 Owner", callback_data: "owner" },
+    { text: "❓ Help", callback_data: "help" },
+  ]);
+  // ⚙️ Owner Panel = alag button, sirf owner ko dikhta hai
+  if (isOwner(uid)) rows.push([{ text: "⚙️ Owner Panel", callback_data: "panel" }]);
   return { inline_keyboard: rows };
 }
 
@@ -75,9 +91,35 @@ function panelKeyboard() {
       [{ text: "📊 Bot Stats", callback_data: "o:stats" }],
       [{ text: "📡 Scan Name Channel", callback_data: "o:scan" }],
       [{ text: "♻️ Force Rescan", callback_data: "o:rescan" }],
+      [{ text: "👤 Accounts", callback_data: "o:accs" }],
       [{ text: "🏠 Back", callback_data: "o:back" }],
     ],
   };
+}
+
+function accountsKeyboard() {
+  const rows = accounts.list().map((a) => [
+    { text: `${a.active ? "✅" : "▫️"} ${a.label} (${a.phoneMasked})`, callback_data: "a:use:" + a.id },
+    { text: "🗑", callback_data: "a:del:" + a.id },
+  ]);
+  rows.push([{ text: "➕ Add Account", callback_data: "a:add" }]);
+  rows.push([{ text: "⬅️ Panel", callback_data: "panel" }]);
+  return { inline_keyboard: rows };
+}
+
+function accountsText() {
+  const list = accounts.list();
+  const body = list.length
+    ? list.map((a) => `${a.active ? "✅" : "▫️"} <b>${esc(a.label)}</b> — ${esc(a.phoneMasked)}`).join("\n")
+    : "_Koi account add nahi hai._";
+  return (
+    `👤 <b>Scanner Accounts</b>\n\n${body}\n\n` +
+    `Scam/name channels scan karne ke liye owner ka apna Telegram account chahiye (bot khud channel history nahi padh sakta).\n\n` +
+    `➕ <b>Add Account</b> — number → OTP → (2FA) se login.\n` +
+    `🔒 Session AES-256 se encrypt hoke save hoti hai, OTP message turant delete ho jata hai.\n` +
+    `⚠️ Sirf <b>apna</b> account add karo — dusre ka account maangna/lagana Telegram ke rules ke against hai.` +
+    (accounts.apiReady() ? "" : `\n\n❗ Pehle <code>API_ID</code> aur <code>API_HASH</code> env vars set karo (my.telegram.org).`)
+  );
 }
 
 const PANEL_TEXT =
@@ -86,7 +128,8 @@ const PANEL_TEXT =
   `• <b>Scan Name Channel</b> — chat id ya @username bhejo, us channel ke saare name fonts scan ho ke add ho jayenge.\n` +
   `  Ek sath multiple bhej sakte ho (space/comma se). Jo pehle se scanned ya duplicate hai wo skip ho jayega.\n` +
   `  Kisi channel ka naam ya watermark store nahi hota — sirf name styles.\n` +
-  `• <b>Force Rescan</b> — pehle se scanned channel ko dobara scan karta hai.`;
+  `• <b>Force Rescan</b> — pehle se scanned channel ko dobara scan karta hai.\n` +
+  `• <b>Accounts</b> — scanner ke liye apna Telegram account number se add/switch karo.`;
 
 function statsText() {
   const s = store.stats(styleList("Aa").length);
@@ -156,42 +199,53 @@ function sendFonts(chatId, text, page) {
 // MAIN FLOW: user ka requested naam — 12-15 decorated names, EK-EK message me,
 // sirf styled name + apna watermark (#naam@FontsxWorld).
 // Collected data me naam mila to wahi do, nahi mila to engine se bana ke do.
-async function sendRequestedNames(chatId, text) {
-  const base = text.trim();
+async function sendRequestedNames(chatId, text, theme) {
+  const base = namegen.titleCase(namegen.cleanName(text));
   const tag = hashTag(base, CHANNEL); // #naam@FontsxWorld — sirf apna watermark
-  const count = 12 + Math.floor(Math.random() * 4); // 12-15
+  const count = 12;
 
+  // 1) Premium engine se top-quality names (scored + de-duped)
+  let blocks = theme ? namegen.themedNames(base, theme, count) : namegen.premiumNames(base, count);
+
+  // 2) Collected (scanned) names me se best mila to unhe bhi mila do
   const stored = store.getNames(base);
-  let blocks = stored.slice(0, count);
-  if (blocks.length < count) {
-    // data me nahi hai (ya kam hai) → generate karke top-up
-    const gen = decoratedNames(base, "", count + 4);
+  if (stored.length) {
+    const ranked = stored
+      .map((v) => ({ v, s: namegen.score(v, base) }))
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 4)
+      .map((x) => x.v);
     const seen = new Set(blocks);
-    for (const g of gen) {
-      if (blocks.length >= count) break;
-      if (!seen.has(g)) {
-        seen.add(g);
-        blocks.push(g);
-      }
-    }
+    blocks = ranked.filter((v) => !seen.has(v)).concat(blocks).slice(0, count);
   }
 
-  await sendSafe(chatId, `✨ <b>${esc(base)}</b> ke liye ${blocks.length} stylish names — ek-ek message me 👇`, {
+  await sendSafe(chatId, `✨ <b>${esc(base)}</b> ke liye ${blocks.length} best stylish names — ek-ek message me 👇`, {
     parse_mode: "HTML",
   });
   for (const block of blocks) {
     await sendSafe(chatId, `${esc(block)}\n\n${esc(tag)}`, { parse_mode: "HTML" });
     await delay(150); // flood limit se bachne ke liye halka gap
   }
-  await sendSafe(chatId, `✅ Ho gaya! Aur styles chahiye?`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🎨 65+ Fonts List", callback_data: "more_fonts" }],
-        [{ text: "👑 Aur Decorated Names", callback_data: "decor" }],
-        [{ text: "📣 Channel", url: "https://t.me/" + CHANNEL }],
-      ],
-    },
+  await sendSafe(chatId, `✅ Ho gaya! Style theme choose karke aur names lo 👇`, {
+    reply_markup: { inline_keyboard: themeRows() },
   });
+}
+
+// Theme buttons (royal / aesthetic / dark / cute / gamer / spiritual / minimal)
+function themeRows() {
+  const ids = namegen.themeIds();
+  const rows = [];
+  for (let i = 0; i < ids.length; i += 3) {
+    rows.push(
+      ids.slice(i, i + 3).map((t) => ({
+        text: `${t.icon} ${t.id.charAt(0).toUpperCase() + t.id.slice(1)}`,
+        callback_data: "t:" + t.id,
+      }))
+    );
+  }
+  rows.push([{ text: "🎨 65+ Fonts List", callback_data: "more_fonts" }]);
+  rows.push([{ text: "📣 Channel", url: "https://t.me/" + CHANNEL }]);
+  return rows;
 }
 
 // ── Commands ──
@@ -208,11 +262,25 @@ bot.onText(/^\/(tutorial|guide)/, (msg) =>
 );
 bot.onText(/^\/help/, (msg) => bot.sendMessage(msg.chat.id, HELP, { parse_mode: "HTML" }));
 
-bot.onText(/^\/(owner|admin|panel)/, (msg) => {
-  if (!isOwner(msg.from.id)) {
-    return bot.sendMessage(msg.chat.id, ownerInfoText(), { parse_mode: "HTML" });
-  }
+// /owner  → owner ki profile card (sabke liye)
+bot.onText(/^\/owner/, (msg) => {
+  const url = ownerProfileUrl();
+  bot.sendMessage(msg.chat.id, ownerInfoText(), {
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: url ? { inline_keyboard: [[{ text: "👤 Owner Profile Kholo", url }]] } : undefined,
+  });
+});
+
+// /panel , /admin → owner panel (sirf owner)
+bot.onText(/^\/(panel|admin)/, (msg) => {
+  if (!isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, "🚫 Ye sirf owner ke liye hai.");
   bot.sendMessage(msg.chat.id, PANEL_TEXT, { parse_mode: "HTML", reply_markup: panelKeyboard() });
+});
+
+bot.onText(/^\/accounts/, (msg) => {
+  if (!isOwner(msg.from.id)) return;
+  bot.sendMessage(msg.chat.id, accountsText(), { parse_mode: "HTML", reply_markup: accountsKeyboard() });
 });
 
 bot.onText(/^\/stats/, (msg) => {
@@ -255,8 +323,8 @@ async function runScan(chatId, ids, force) {
   if (!scanner.scannerReady()) {
     return bot.sendMessage(
       chatId,
-      `⚠️ Scanner abhi ready nahi hai.\nIske liye <code>API_ID</code>, <code>API_HASH</code> aur <code>SESSION_STRING</code> env vars set karo.\nEk baar <code>node gen-session.js</code> chala ke session string banao (README dekho).`,
-      { parse_mode: "HTML" }
+      `⚠️ Scanner ready nahi hai.\n\n1️⃣ <code>API_ID</code> + <code>API_HASH</code> env vars set karo (my.telegram.org)\n2️⃣ Owner Panel → 👤 <b>Accounts</b> → ➕ <b>Add Account</b> se apna number login karo.`,
+      { parse_mode: "HTML", reply_markup: accountsKeyboard() }
     );
   }
   const status = await sendSafe(chatId, `📡 Scanning ${ids.length} channel(s)... ⏳`);
@@ -282,6 +350,30 @@ bot.on("message", async (msg) => {
   const t = (msg.text || "").trim();
   if (!t || t.startsWith("/")) return;
   store.trackUser(msg.from);
+
+  // Owner ka pending account-login input (phone / OTP / 2FA)
+  if (isOwner(msg.from.id) && accounts.loginState(msg.from.id)) {
+    const step = accounts.loginState(msg.from.id);
+    let res;
+    try {
+      res = await accounts.handleInput(msg.from.id, t);
+    } catch (e) {
+      accounts.cancelLogin(msg.from.id);
+      res = { step: "error", message: "❌ " + esc(e.message) };
+    }
+    // OTP / password wale message ko chat se hata do
+    if (step === "code" || step === "password") {
+      bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {});
+    }
+    if (res) {
+      const done = res.step === "done" || res.step === "cancelled" || res.step === "error";
+      return bot.sendMessage(msg.chat.id, res.message, {
+        parse_mode: "HTML",
+        reply_markup: done ? accountsKeyboard() : undefined,
+      });
+    }
+    return;
+  }
 
   // Owner ka pending scan input
   if (isOwner(msg.from.id) && pendingScan.has(msg.from.id)) {
@@ -326,11 +418,42 @@ bot.on("callback_query", async (q) => {
     } else if (data === "decor") {
       await sendRequestedNames(chatId, saved);
     } else if (data === "owner") {
-      if (isOwner(q.from.id)) {
-        await bot.sendMessage(chatId, PANEL_TEXT, { parse_mode: "HTML", reply_markup: panelKeyboard() });
-      } else {
-        await bot.sendMessage(chatId, ownerInfoText(), { parse_mode: "HTML" });
+      // 👑 Owner button — sabke liye owner ki profile card
+      const url = ownerProfileUrl();
+      await bot.sendMessage(chatId, ownerInfoText(), {
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+        reply_markup: url ? { inline_keyboard: [[{ text: "👤 Owner Profile Kholo", url }]] } : undefined,
+      });
+    } else if (data === "panel") {
+      // ⚙️ Owner Panel — alag button, sirf owner
+      if (!isOwner(q.from.id)) {
+        await bot.answerCallbackQuery(q.id, { text: "🚫 Sirf owner ke liye", show_alert: true }).catch(() => {});
+        return;
       }
+      await bot.sendMessage(chatId, PANEL_TEXT, { parse_mode: "HTML", reply_markup: panelKeyboard() });
+    } else if (data.startsWith("t:")) {
+      await sendRequestedNames(chatId, saved, data.slice(2));
+    } else if (data === "o:accs" && isOwner(q.from.id)) {
+      await bot.sendMessage(chatId, accountsText(), { parse_mode: "HTML", reply_markup: accountsKeyboard() });
+    } else if (data === "a:add" && isOwner(q.from.id)) {
+      try {
+        await accounts.startLogin(q.from.id);
+        await bot.sendMessage(
+          chatId,
+          `➕ <b>Add Account</b>\n\nApna phone number country code ke sath bhejo, jaise <code>+919876543210</code>.\n\n` +
+            `⚠️ Sirf apna account add karo. Cancel ke liye: <code>cancel</code>`,
+          { parse_mode: "HTML" }
+        );
+      } catch (e) {
+        await bot.sendMessage(chatId, "❌ " + esc(e.message), { parse_mode: "HTML" });
+      }
+    } else if (data.startsWith("a:use:") && isOwner(q.from.id)) {
+      accounts.setActive(data.slice(6));
+      await bot.sendMessage(chatId, "✅ Active account switch ho gaya.", { reply_markup: accountsKeyboard() });
+    } else if (data.startsWith("a:del:") && isOwner(q.from.id)) {
+      accounts.remove(data.slice(6));
+      await bot.sendMessage(chatId, "🗑 Account hata diya (session delete).", { reply_markup: accountsKeyboard() });
     } else if (data === "o:stats" && isOwner(q.from.id)) {
       await bot.sendMessage(chatId, statsText(), { parse_mode: "HTML", reply_markup: panelKeyboard() });
     } else if ((data === "o:scan" || data === "o:rescan") && isOwner(q.from.id)) {
@@ -369,7 +492,8 @@ bot.setMyCommands([
   { command: "fancy", description: "Decorated fancy names (ek-ek msg me)" },
   { command: "tutorial", description: "Kaise use kare" },
   { command: "help", description: "Madad" },
-  { command: "owner", description: "Owner panel (sirf owner ke liye)" },
+  { command: "owner", description: "Owner ki profile" },
+  { command: "panel", description: "Owner panel (sirf owner)" },
 ]).catch(() => {});
 
 bot.on("polling_error", (e) => console.error("polling_error:", e.message));

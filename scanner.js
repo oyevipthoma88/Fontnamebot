@@ -5,23 +5,34 @@
 // Ye sirf styled name text aur ornaments collect karta hai — kisi channel ka
 // naam, @username, link ya watermark store NAHI karta.
 const store = require("./store");
+const accounts = require("./accounts");
 
 let _client = null;
+let _clientSession = null;
 
+// Ready = API creds + (owner panel se add kiya account YA env SESSION_STRING)
 function scannerReady() {
-  return !!(process.env.API_ID && process.env.API_HASH && process.env.SESSION_STRING);
+  return !!(process.env.API_ID && process.env.API_HASH && accounts.activeSession());
 }
 
 async function getClient() {
+  const session = accounts.activeSession();
+  if (!session) throw new Error("Koi account add nahi hai — Owner Panel se ➕ Add Account karo.");
+  // account switch hua to purana client chhod do
+  if (_client && _clientSession !== session) {
+    await _client.disconnect().catch(() => {});
+    _client = null;
+  }
   if (_client) return _client;
   // Lazy require — telegram package na ho ya env missing ho to baki bot chalta rahe
   const { TelegramClient } = require("telegram");
   const { StringSession } = require("telegram/sessions");
   const apiId = parseInt(process.env.API_ID, 10);
   const apiHash = process.env.API_HASH;
-  _client = new TelegramClient(new StringSession(process.env.SESSION_STRING), apiId, apiHash, {
+  _client = new TelegramClient(new StringSession(session), apiId, apiHash, {
     connectionRetries: 5,
   });
+  _clientSession = session;
   await _client.connect();
   return _client;
 }
@@ -81,7 +92,7 @@ function extractOrnaments(line, out) {
 async function scanChannels(ids, opts = {}) {
   if (!scannerReady()) {
     throw new Error(
-      "Scanner ke liye API_ID, API_HASH aur SESSION_STRING set karo (gen-session.js chala ke)."
+      "Scanner ke liye API_ID + API_HASH env chahiye aur Owner Panel se ek account add karna hoga."
     );
   }
   const client = await getClient();
