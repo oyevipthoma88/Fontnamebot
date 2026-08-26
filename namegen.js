@@ -356,19 +356,22 @@ const VIRAL_HEADS = [
   "° 𝂊𝃳Ⲙ᧘ᘫ ꧊",
   "𓂃ᷧ ᷟ  ",
 ];
+// Channel tails: deco + ek emoji (vibe/flag) — frame emoji block ke bahar aata hai
 const VIRAL_TAILS = [
-  " ↝ 🚩 👑",
-  " 🚩 👑",
-  " ⏤⃝ ⚡ 👑",
-  " ⏤⃝ 🔥 👑",
-  " ᡣ𐭩𝆆𝁛゙࡙ 👑",
-  " ࿐ 👑",
-  " ꯭𝆺꯭𝅥༎꯭ࠫ𓍢ִ໋»꯭⟶꯭⋆꯭ 🌾 💎",
-  " •.𝇄𝁜๎ 🏨 𝀍𝀤 °",
-  " ･<\\> 👑",
-  " </𝟑 ｡ 👑",
-  " 𒁹 👑",
-  " ࿐࿔ 👑",
+  " ↝ 🚩",
+  " 🚩",
+  " ⏤⃝ ⚡",
+  " ⏤⃝ 🔥",
+  " ᡣ𐭩𝆆𝁛゙࡙",
+  " ࿐",
+  " ꯭𝆺꯭𝅥༎꯭ࠫ𓍢ִ໋»꯭⟶꯭⋆꯭ 🌾",
+  " •.𝇄𝁜๎ 🏨 𝀍𝀤",
+  " ･<\\>",
+  " </𝟑 ｡",
+  " 𒁹",
+  " ࿐࿔",
+  " ࡃ 🍔 ࿐",
+  " ⏤⃝ 🇦🇱",
 ];
 const VIRAL_FRAMES = ["👑", "💎", "🔥", "🚩", "⚡", "🖤"];
 
@@ -401,14 +404,10 @@ function viralName(plain, r) {
   return parts.join(glue);
 }
 
-const VIRAL_LAYOUTS = [
-  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
-  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
-  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
-  (n, r) => `👑 ${n}${pick(VIRAL_TAILS, r)}`,
-  (n, r) => `${pick(VIRAL_FRAMES, r)} ${n} ${pick(VIRAL_FRAMES, r)}`,
-  (n, r) => `꧁ ${n} ꧂${pick(VIRAL_TAILS, r)}`,
-];
+// Channel ka signature block-style: frame emoji upar, blank line, naam,
+// blank line, frame emoji neeche — bilkul @FontsxWorld posts jaisa.
+const VIRAL_BLOCK = (n, head, tail, frame) =>
+  `${frame}\n\n\n${head}${n}${tail}\n\n\n${frame}`;
 
 // N viral names — deterministic per naam, de-duped
 // vibes mile to 👑/🚩 ki jagah naam se related emojis lagte hain
@@ -423,13 +422,16 @@ function viralNames(rawName, count = 8, vibes = []) {
   const tails = hasVibe
     ? VIRAL_TAILS.map((t) => t.split("👑").join(crown).split("🚩").join(alt))
     : VIRAL_TAILS;
+  // Channel jaisa: zyada tar block format (frame upar/neeche, naam beech me),
+  // kuch single-line variety bhi.
   const layouts = [
+    (n, rr) => VIRAL_BLOCK(n, pick(heads, rr), pick(tails, rr), crown),
+    (n, rr) => VIRAL_BLOCK(n, pick(heads, rr), pick(tails, rr), crown),
+    (n, rr) => VIRAL_BLOCK(n, pick(heads, rr), pick(tails, rr), pick(frames, rr)),
+    (n, rr) => VIRAL_BLOCK(n, pick(heads, rr), pick(tails, rr), pick(frames, rr)),
+    (n, rr) => VIRAL_BLOCK(n, `─   `, pick(tails, rr), crown),
     (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
-    (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
-    (n, rr) => `${pick(heads, rr)}${n}${pick(tails, rr)}`,
-    (n, rr) => `${crown} ${n}${pick(tails, rr)}`,
     (n, rr) => `${pick(frames, rr)} ${n} ${pick(frames, rr)}`,
-    (n, rr) => `꧁ ${n} ꧂${pick(tails, rr)}`,
   ];
   const out = [];
   const seen = new Set();
