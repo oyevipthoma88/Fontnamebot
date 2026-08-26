@@ -28,6 +28,11 @@ extendTemplates(store.templates);
 
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const isOwner = (id) => OWNER_ID && Number(id) === OWNER_ID;
+// Telegram user ka display naam (demo/example ke liye) — koi hardcoded naam nahi
+const displayName = (u) => {
+  const n = u && [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+  return n && n.length <= 32 ? n : "Rahul";
+};
 
 // Telegram flood-limit safe sender (same chat me bahut saare messages)
 async function sendSafe(chatId, text, opts = {}) {
@@ -154,13 +159,13 @@ const WELCOME = (name) =>
   `👑 <b>Hey ${esc(name)}!</b>\n\n` +
   `Main <b>Fancy Font Name Bot</b> hoon 🪈\n` +
   `Mujhe koi bhi naam bhejo — main use <b>65+ stylish fonts</b> aur <b>decorated fancy names</b> me bana ke doonga ✨\n\n` +
-  `<b>Example:</b> <code>Kabir Singh</code>\n\n` +
+  `<b>Example:</b> <code>${esc(name)}</code>\n\n` +
   `Neeche buttons se tutorial dekho 👇`;
 
-const TUTORIAL =
+const TUTORIAL = (name) =>
   `📖 <b>Tutorial — Kaise use kare?</b>\n\n` +
   `1️⃣ Bot ko <code>/start</code> karo.\n` +
-  `2️⃣ Seedha apna naam type karke bhej do (jaise <code>Kabir Singh</code>).\n` +
+  `2️⃣ Seedha apna naam type karke bhej do (jaise <code>${esc(name)}</code>).\n` +
   `3️⃣ Bot turant <b>12-15 decorated names</b> ek-ek message me bhej dega.\n` +
   `4️⃣ <b>/fonts naam</b> likho — 65+ font styles page buttons ke sath milenge.\n` +
   `5️⃣ Jo style pasand aaye, us par <b>tap-and-hold → Copy</b> karke Telegram naam/bio me paste kar do.\n\n` +
@@ -252,7 +257,7 @@ function themeRows() {
 }
 
 // ── Commands ──
-bot.onText(/^\/start/, (msg) => {
+bot.onText(/^\/start(?=\s|$)/, (msg) => {
   store.trackUser(msg.from);
   bot.sendMessage(msg.chat.id, WELCOME(msg.from.first_name || "friend"), {
     parse_mode: "HTML",
@@ -260,13 +265,13 @@ bot.onText(/^\/start/, (msg) => {
   });
 });
 
-bot.onText(/^\/(tutorial|guide)/, (msg) =>
-  bot.sendMessage(msg.chat.id, TUTORIAL, { parse_mode: "HTML", reply_markup: startKeyboard(msg.from.id) })
+bot.onText(/^\/(tutorial|guide)(?=\s|$)/, (msg) =>
+  bot.sendMessage(msg.chat.id, TUTORIAL(displayName(msg.from)), { parse_mode: "HTML", reply_markup: startKeyboard(msg.from.id) })
 );
-bot.onText(/^\/help/, (msg) => bot.sendMessage(msg.chat.id, HELP, { parse_mode: "HTML" }));
+bot.onText(/^\/help(?=\s|$)/, (msg) => bot.sendMessage(msg.chat.id, HELP, { parse_mode: "HTML" }));
 
 // /owner  → owner ki profile card (sabke liye)
-bot.onText(/^\/owner/, (msg) => {
+bot.onText(/^\/owner(?=\s|$)/, (msg) => {
   const url = ownerProfileUrl();
   bot.sendMessage(msg.chat.id, ownerInfoText(), {
     parse_mode: "HTML",
@@ -276,22 +281,22 @@ bot.onText(/^\/owner/, (msg) => {
 });
 
 // /panel , /admin → owner panel (sirf owner)
-bot.onText(/^\/(panel|admin)/, (msg) => {
+bot.onText(/^\/(panel|admin)(?=\s|$)/, (msg) => {
   if (!isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, "🚫 Ye sirf owner ke liye hai.");
   bot.sendMessage(msg.chat.id, PANEL_TEXT, { parse_mode: "HTML", reply_markup: panelKeyboard() });
 });
 
-bot.onText(/^\/accounts/, (msg) => {
+bot.onText(/^\/accounts(?=\s|$)/, (msg) => {
   if (!isOwner(msg.from.id)) return;
   bot.sendMessage(msg.chat.id, accountsText(), { parse_mode: "HTML", reply_markup: accountsKeyboard() });
 });
 
-bot.onText(/^\/stats/, (msg) => {
+bot.onText(/^\/stats(?=\s|$)/, (msg) => {
   if (!isOwner(msg.from.id)) return;
   bot.sendMessage(msg.chat.id, statsText(), { parse_mode: "HTML", reply_markup: panelKeyboard() });
 });
 
-bot.onText(/^\/scan(?:\s+([\s\S]+))?/, async (msg, m) => {
+bot.onText(/^\/scan(?=\s|$)(?:\s+([\s\S]+))?/, async (msg, m) => {
   if (!isOwner(msg.from.id)) return;
   const ids = (m[1] || "").split(/[\s,]+/).filter(Boolean);
   if (!ids.length) {
@@ -305,17 +310,17 @@ bot.onText(/^\/scan(?:\s+([\s\S]+))?/, async (msg, m) => {
   await runScan(msg.chat.id, ids, false);
 });
 
-bot.onText(/^\/fonts(?:\s+([\s\S]+))?/, (msg, m) => {
+bot.onText(/^\/fonts(?=\s|$)(?:\s+([\s\S]+))?/, (msg, m) => {
   const t = (m[1] || "").trim();
-  if (!t) return bot.sendMessage(msg.chat.id, "Use: <code>/fonts Kabir Singh</code>", { parse_mode: "HTML" });
+  if (!t) return bot.sendMessage(msg.chat.id, `Use: <code>/fonts ${esc(displayName(msg.from))}</code>`, { parse_mode: "HTML" });
   store.trackUser(msg.from);
   store.bumpRequest(msg.from.id);
   sendFonts(msg.chat.id, t, 0);
 });
 
-bot.onText(/^\/fancy(?:\s+([\s\S]+))?/, async (msg, m) => {
+bot.onText(/^\/fancy(?=\s|$)(?:\s+([\s\S]+))?/, async (msg, m) => {
   const t = (m[1] || "").trim();
-  if (!t) return bot.sendMessage(msg.chat.id, "Use: <code>/fancy Kabir</code>", { parse_mode: "HTML" });
+  if (!t) return bot.sendMessage(msg.chat.id, `Use: <code>/fancy ${esc(displayName(msg.from))}</code>`, { parse_mode: "HTML" });
   store.trackUser(msg.from);
   store.bumpRequest(msg.from.id);
   await sendRequestedNames(msg.chat.id, t);
@@ -416,17 +421,17 @@ bot.on("callback_query", async (q) => {
   }
   const chatId = q.message.chat.id;
   const data = q.data || "";
-  const saved = lastText.get(chatId) || "Kabir Singh";
+  const saved = lastText.get(chatId) || displayName(q.from);
   store.trackUser(q.from);
   try {
     if (data === "tutorial") {
-      await bot.sendMessage(chatId, TUTORIAL, { parse_mode: "HTML", reply_markup: startKeyboard(q.from.id) });
+      await bot.sendMessage(chatId, TUTORIAL(displayName(q.from)), { parse_mode: "HTML", reply_markup: startKeyboard(q.from.id) });
     } else if (data === "help") {
       await bot.sendMessage(chatId, HELP, { parse_mode: "HTML" });
     } else if (data === "demo") {
-      await sendFonts(chatId, "Kabir Singh", 0);
+      await sendFonts(chatId, displayName(q.from), 0);
     } else if (data === "demo_decor") {
-      await sendRequestedNames(chatId, "Kabir Singh");
+      await sendRequestedNames(chatId, displayName(q.from));
     } else if (data === "more_fonts") {
       await sendFonts(chatId, saved, 0);
     } else if (data === "decor") {
