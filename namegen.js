@@ -134,6 +134,15 @@ const THEMES = [
     sep: ["·", "—", "|", "•"],
     fonts: ["Small Caps", "Monospace", "Sans Bold", "Double Struck"],
   },
+  {
+    // VIRAL — FontsXWorld channel level heavy style (apna glyph engine)
+    id: "viral",
+    frames: ["👑", "🔥", "💎", "⚡"],
+    pairs: [["─", "─"], ["༺", "༻"]],
+    sep: ["↝", "⏤⃝", "･", "×"],
+    fonts: [],
+    viral: true,
+  },
 ];
 
 // ── layouts: clean, symmetric, copy-paste friendly ──
@@ -196,6 +205,132 @@ function score(block, plain) {
   return s;
 }
 
+// ───────────────────────────────────────────────
+// VIRAL ENGINE — "channel level" heavy decorated names
+// Style reference: top name-font channels (👑 frames, letter-spaced
+// greek/kayah/ethiopic lookalikes, halki combining-mark chhite, royal tails).
+// ───────────────────────────────────────────────
+
+// Per-letter rare lookalike glyphs (lowercase letters; capitals base font me rehte hain)
+const VIRAL_SET = {
+  a: ["𝛂", "𝜶", "𑜼", "ꓛ", "ᧁ"],
+  b: ["𝜷", "ᑲ", "𝛃"],
+  c: ["𝚌", "ᥴ", "૬", "𝑐"],
+  d: ["ᕲ", "𝚍", "ծ", "∂"],
+  e: ["𝛆", "𝜺", "ꫀ", "є"],
+  f: ["⨍", "𝑓", "ʄ", "ƒ"],
+  g: ["𝑔", "ɢ", "ᶃ", "ց"],
+  h: ["ꪱ", "𝚑", "հ", "𑜼"],
+  i: ["༏", "𝜾", "ᛧ", "¡", "ı"],
+  j: ["𝙹", "ʝ", "𝑗"],
+  k: ["𝛋", "ҡ", "ƙ", "ᴋ"],
+  l: ["𒁹", "𝚕", "ℓ", "ʆ"],
+  m: ["𝛍", "ⲙ", "ო", "ᴍ"],
+  n: ["𝜼", "𝛈", "န", "ท"],
+  o: ["𝛐", "𝚘", "ꭷ", "໐"],
+  p: ["ꓕ", "𐓙", "ρ", "ᴘ"],
+  q: ["𝑞", "զ", "ǫ"],
+  r: ["ɤ", "᱂", "𝚛", "ⲅ"],
+  s: ["န", "𝜎", "ร", "ꇙ"],
+  t: ["τ", "𝜏", "𐑄", "ᴛ"],
+  u: ["𝛖", "υ", "ຟ", "ᴜ"],
+  v: ["𝜈", "ѵ", "ν", "ᴠ"],
+  w: ["𝛚", "ω", "ꝃ", "ᴡ"],
+  x: ["𝑥", "Ӽ", "᥊"],
+  y: ["𝛄", "ყ", "𐌦", "ʏ"],
+  z: ["𝑧", "չ", "ᴢ"],
+};
+
+// Halki combining marks (zitna channel use karta hai — render friendly)
+const VIRAL_MARKS = ["̓", "፟", "͛", "̙", "̴", "̥", "̎"];
+// Capital letters ke liye base fonts
+const VIRAL_BASES = ["Sans Bold Italic", "Bold Italic Serif", "Bold Serif", "Sans Bold"];
+
+const VIRAL_HEADS = [
+  "👑 ─  ",
+  "👑 ─   ",
+  "👑 ⎯࡙⎯ໍ  ",
+  "👑 𓂃ᷧ ᷟ  ",
+  "👑 ‿⃪ᷝ ⷨ  ",
+  "👑 ✇‿⃪ᷝ ⷨ ",
+  "👑 ⠀ ─  ᱝ  ",
+  "💎 ᯓ꯭𓆰꯭𝅅༎꯭ ꯭ ",
+  "🕯 𝁛゙",
+  "🧿 𝄄༐𝄄 ⋆─┼༢། ",
+  "° 𝂊𝃳Ⲙ᧘ᘫ ꧊",
+  "𓂃ᷧ ᷟ  ",
+];
+const VIRAL_TAILS = [
+  " ↝ 🚩 👑",
+  " 🚩 👑",
+  " ⏤⃝ ⚡ 👑",
+  " ⏤⃝ 🔥 👑",
+  " ᡣ𐭩𝆆𝁛゙࡙ 👑",
+  " ࿐ 👑",
+  " ꯭𝆺꯭𝅥༎꯭ࠫ𓍢ִ໋»꯭⟶꯭⋆꯭ 🌾 💎",
+  " •.𝇄𝁜๎ 🏨 𝀍𝀤 °",
+  " ･<\\> 👑",
+  " </𝟑 ｡ 👑",
+  " 𒁹 👑",
+  " ࿐࿔ 👑",
+];
+const VIRAL_FRAMES = ["👑", "💎", "🔥", "🚩", "⚡", "🖤"];
+
+// Ek word ko viral glyphs me badlo — token-wise (combining mark kabhi alag nahi hota)
+function viralWordTokens(word, r, baseMap) {
+  return cp(word).map((ch, i) => {
+    let g;
+    if (i === 0 && /[A-Za-z]/.test(ch)) {
+      g = baseMap[ch.toUpperCase()] || ch;
+    } else {
+      const low = ch.toLowerCase();
+      const set = VIRAL_SET[low];
+      g = set ? pick(set, r) : baseMap[ch] || baseMap[low] || ch;
+    }
+    if (r() < 0.16) g += pick(VIRAL_MARKS, r);
+    return g;
+  });
+}
+
+// Poora naam viral style me (spaced ya joined)
+function viralName(plain, r) {
+  const words = plain.split(" ").filter(Boolean);
+  const baseMap = MAPS[pick(VIRAL_BASES, r)];
+  const spaced = r() < 0.5;
+  const glue = pick([" ↝ ", " ⏤⃝ ", " ･ ", " × ", " "], r);
+  const parts = words.map((w) => {
+    const tokens = viralWordTokens(w, r, baseMap);
+    return spaced ? tokens.join(" ") : tokens.join("");
+  });
+  return parts.join(glue);
+}
+
+const VIRAL_LAYOUTS = [
+  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
+  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
+  (n, r) => `${pick(VIRAL_HEADS, r)}${n}${pick(VIRAL_TAILS, r)}`,
+  (n, r) => `👑 ${n}${pick(VIRAL_TAILS, r)}`,
+  (n, r) => `${pick(VIRAL_FRAMES, r)} ${n} ${pick(VIRAL_FRAMES, r)}`,
+  (n, r) => `꧁ ${n} ꧂${pick(VIRAL_TAILS, r)}`,
+];
+
+// N viral names — deterministic per naam, de-duped
+function viralNames(rawName, count = 8) {
+  const plain = titleCase(cleanName(rawName)) || "Name";
+  const r = rng(seedOf(plain.toLowerCase()) ^ 0x1f123bb5);
+  const out = [];
+  const seen = new Set();
+  let guard = 0;
+  while (out.length < count && guard++ < count * 30) {
+    const n = viralName(plain, r);
+    const block = pick(VIRAL_LAYOUTS, r)(n, r).trim();
+    if (!block || seen.has(block)) continue;
+    seen.add(block);
+    out.push(block);
+  }
+  return out;
+}
+
 // ── MAIN: best decorated names ──
 // Deterministic: ek naam ke liye har baar same top results (users ko consistent
 // quality milti hai), par har naam ka apna unique flavour.
@@ -212,6 +347,15 @@ function premiumNames(rawName, count = 12, opts = {}) {
 
   // sabhi theme × font × layout combos try karo, phir best chuno
   for (const theme of themes) {
+    // Viral theme apna glyph engine use karti hai (channel-level heavy style)
+    if (theme.viral) {
+      for (const block of viralNames(plain, 12)) {
+        if (seen.has(block)) continue;
+        seen.add(block);
+        candidates.push({ block, theme: theme.id, font: "Viral Mix", s: 128 + r() * 8 });
+      }
+      continue;
+    }
     const fonts = theme.fonts.filter((f) => fontPool.includes(f));
     const useFonts = fonts.length ? fonts : fontPool.slice(0, 3);
     for (const font of useFonts) {
@@ -256,4 +400,4 @@ function themedNames(rawName, themeId, count = 8) {
 
 const themeIds = () => THEMES.map((t) => ({ id: t.id, icon: t.frames[0] }));
 
-module.exports = { premiumNames, themedNames, themeIds, cleanName, titleCase, score, usableFonts };
+module.exports = { premiumNames, themedNames, themeIds, cleanName, titleCase, score, usableFonts, viralNames };
