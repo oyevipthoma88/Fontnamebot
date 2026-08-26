@@ -1,4 +1,5 @@
-// Fancy font engine — 60+ styles + decorated name templates
+// Fancy font engine — 65+ styles + decorated name templates
+// Isme sab unicode maps apne banaye hue hain — kisi channel ka naam/watermark nahi.
 const LOWER = "abcdefghijklmnopqrstuvwxyz";
 const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const DIGITS = "0123456789";
@@ -55,6 +56,8 @@ const MAPS = {
   "Squared": fromStart(0x1f130, 0x1f130, null),
   "Squared Dark": fromStart(0x1f170, 0x1f170, null),
   "Fullwidth": fromStart(0xff21, 0xff41, 0xff10),
+  "Parenthesized": fromStart(null, 0x249c, null), // ⒜⒝⒞...
+  "Flag Letters": fromStart(0x1f1e6, 0x1f1e6, null), // regional indicators
   "Small Caps": fromLists(
     UPPER,
     "\u1d00\u0299\u1d04\u1d05\u1d07\u0493\u0262\u029c\u026a\u1d0a\u1d0b\u029f\u1d0d\u0274\u1d0f\u1d18\u01eb\u0280\u0455\u1d1b\u1d1c\u1d20\u1d21\u02e3\u028f\u1d22"
@@ -89,18 +92,36 @@ const MAPS = {
     "\u2200\u10da\u0186\u15E1\u018E\u2132\u2141\u0048\u0049\u017F\u029E\u2142\u0057\u1D0E\u004F\u0500\u1F49\u1D1A\u0053\u22A5\u2229\u039B\u039B\u2717\u2144\u005A",
     "\u0250\u0071\u0254\u0070\u01dd\u025f\u0253\u0265\u1d09\u0567\u029e\u05df\u026f\u0075\u006f\u0064\u0062\u0279\u0073\u0287\u2229\u028c\u028d\u0078\u028e\u007a"
   ),
+  "Asian Fusion": fromLists(
+    "\u5342\u4e43\u5320\u15ea\u4e47\u5343\u0e8e\u5344\u4e28\uf78c\u049c\u3125\u722a\u51e0\u3116\u5369\u024a\u5c3a\u4e02\u3112\u3129\u1437\u5c71\u4e42\u311a\u4e59",
+    "\u5342\u4e43\u5320\u15ea\u4e47\u5343\u0e8e\u5344\u4e28\uf78c\u049c\u3125\u722a\u51e0\u3116\u5369\u024a\u5c3a\u4e02\u3112\u3129\u1437\u5c71\u4e42\u311a\u4e59"
+  ),
+  "Thai Mix": fromLists(
+    "\u0e04\u0e52\u03c2\u0e54\u0454\u0166\u03eb\u0452\u0e23\u05df\u043a\u026d\u0e53\u0e20\u0e4f\u05e7\u1ee3\u0433\u0e23\u05c7\u0e22\u05e9\u0e2c\u05d0\u0e25\u0579",
+    "\u0e04\u0e52\u03c2\u0e54\u0454\u0166\u03eb\u0452\u0e23\u05df\u043a\u026d\u0e53\u0e20\u0e4f\u05e7\u1ee3\u0433\u0e23\u05c7\u0e22\u05e9\u0e2c\u05d0\u0e25\u0579"
+  ),
+  "Currency": fromLists(
+    "\u20b3\u0e3f\u20b5\u0110\u0246\u20a3\u20b2\u2c67\u0142\u004a\u20ad\u2c60\u20a5\u20a6\u00d8\u20b1\u0051\u2c64\u20b4\u20ae\u0244\u0056\u20a9\u04fe\u024e\u2c6b",
+    "\u20b3\u0e3f\u20b5\u0110\u0246\u20a3\u20b2\u2c67\u0142\u004a\u20ad\u2c60\u20a5\u20a6\u00f8\u20b1\u0051\u2c64\u20b4\u20ae\u0244\u0056\u20a9\u04fe\u024e\u2c6b"
+  ),
 };
 
 // Wrapping / decorating styles (applied to plain text)
 const WRAPPERS = [
   ["Strike", (t) => cp(t).map((c) => c + "\u0336").join("")],
   ["Underline", (t) => cp(t).map((c) => c + "\u0332").join("")],
+  ["Double Underline", (t) => cp(t).map((c) => c + "\u0333").join("")],
+  ["Overline", (t) => cp(t).map((c) => c + "\u0305").join("")],
+  ["Tilde Overlay", (t) => cp(t).map((c) => c + "\u0334").join("")],
   ["Slash", (t) => cp(t).map((c) => c + "\u0338").join("")],
   ["Cross Above", (t) => cp(t).map((c) => c + "\u033D").join("")],
   ["Dotted", (t) => cp(t).map((c) => c + "\u0323").join("")],
   ["Wavy", (t) => cp(t).map((c) => c + "\u0330").join("")],
   ["Heartify", (t) => cp(t).join("\u2665")],
   ["Starify", (t) => cp(t).join("\u2727")],
+  ["Star Join", (t) => cp(t).join("\u2736")],
+  ["Wave Join", (t) => cp(t).join("\u301c")],
+  ["Diamond Join", (t) => cp(t).join("\u25c8")],
   ["Arrowify", (t) => cp(t).join("\u1d33")],
   ["Spaced", (t) => cp(t).join(" ")],
   ["Dotify", (t) => cp(t).join("\u00b7")],
@@ -112,7 +133,7 @@ function applyMap(map, text) {
     .join("");
 }
 
-// 60+ style variants
+// 65+ style variants
 function styleList(text) {
   const out = [];
   for (const [name, map] of Object.entries(MAPS)) out.push([name, applyMap(map, text)]);
@@ -129,6 +150,14 @@ function styleList(text) {
     ["Monospace", "Dotify"],
     ["Cyrillic Mix", "Underline"],
     ["Tribal", "Spaced"],
+    ["Asian Fusion", "Starify"],
+    ["Thai Mix", "Wavy"],
+    ["Currency", "Dotify"],
+    ["Flag Letters", "Spaced"],
+    ["Bold Script", "Overline"],
+    ["Sans Bold", "Double Underline"],
+    ["Italic Serif", "Star Join"],
+    ["Bold Italic Serif", "Diamond Join"],
   ];
   for (const [m, w] of combos) {
     const wrap = WRAPPERS.find((x) => x[0] === w)[1];
@@ -169,7 +198,7 @@ const MIX_SETS = [
 ];
 
 // Base fonts used for the untouched letters
-const BASE_FONTS = ["Sans Bold Italic", "Bold Italic Serif", "Bold Fraktur", "Bold Script", "Sans Bold", "Monospace"];
+const BASE_FONTS = ["Sans Bold Italic", "Bold Italic Serif", "Bold Fraktur", "Bold Script", "Sans Bold", "Monospace", "Bold Serif", "Italic Serif"];
 
 // Zero-width / combining decorations sprinkled inside letters
 const MARKS = ["\u0353", "\u0359", "\u0325", "\u0348", "\u034D", "\u0362", "\u0334", "\u0350", "\u0357", "\u035B"];
@@ -186,6 +215,12 @@ const PRE = [
   "\u16E7\u0DF4",
   "\u10DA\u0F3C",
   "\u0A73\u0A02",
+  "\u22c6\u02da\u2740\u02d6\u00b0",
+  "\u263e\u22c6\u207a",
+  "\u2727\u30fb\u3099",
+  "\u2323\u2323",
+  "\u0968\u0967",
+  "\u{1F302}\u02da",
 ];
 const POST = [
   "\u21dd \u{1F6A9}",
@@ -198,10 +233,38 @@ const POST = [
   "\u0F3D\u16E7",
   "\u2765 \u{1F338}",
   "\u{1F082}\u{1FAC0}",
+  "\u02d6\u00b0\u2740\u02da\u22c6",
+  "\u207a\u22c6\u263d",
+  "\u30fb\u3099\u2727",
+  "\u0967\u0968",
+  "\u2661\u2e1d\u2e1d",
+  "\u27e1\u0741\u207a",
 ];
-const SEP = ["\u21dd", "\u2500\u253c", "\u2740", "\u0f3c\u0f3d", "\u2027", "\u01c0", "\u22c6", "\u2508"];
-const FRAMES = ["\u{1F9FF}", "\u{1F451}", "\u{1F48E}", "\u{1F56F}", "\u{1F6A9}", "\u{1F338}", "\u{1F99A}", "\u2728", "\u{1F48C}", "\u{1FA88}", "\u{1F31F}", "\u26a1"];
+const SEP = ["\u21dd", "\u2500\u253c", "\u2740", "\u0f3c\u0f3d", "\u2027", "\u01c0", "\u22c6", "\u2508", "\u0968\u0967", "\u02da\u207a\u30fb", "\u26e7", "\u2726", "\uFF61", "\u27e1"];
+const FRAMES = ["\u{1F9FF}", "\u{1F451}", "\u{1F48E}", "\u{1F56F}", "\u{1F6A9}", "\u{1F338}", "\u{1F99A}", "\u2728", "\u{1F48C}", "\u{1FA88}", "\u{1F31F}", "\u26a1", "\u{1F319}", "\u{1F98B}", "\u{1F54A}\uFE0F", "\u{1F9F8}", "\u{1F380}", "\u{1FAAC}", "\u{1F4AB}", "\u{1F338}"];
 const FILLERS = ["\u2500\u2500", "\u2504\u2504", "\u00b7\u00b7", "\u2508\u2508", "\u2027\u2027"];
+
+// Scanner se collect kiye gaye ornaments yahan merge hote hain (runtime)
+const TEMPLATE_CAP = 250;
+function extendTemplates(t) {
+  if (!t) return { added: 0 };
+  let added = 0;
+  const merge = (pool, items) => {
+    for (const raw of items || []) {
+      const v = String(raw).trim();
+      if (!v || v.length > 24) continue;
+      if (pool.includes(v)) continue;
+      if (pool.length >= TEMPLATE_CAP) pool.shift();
+      pool.push(v);
+      added++;
+    }
+  };
+  merge(PRE, t.pre);
+  merge(POST, t.post);
+  merge(SEP, t.sep);
+  merge(FRAMES, t.frames);
+  return { added };
+}
 
 // Mix letters: base font + lookalike swaps + optional marks
 function mixName(text, r, opts = {}) {
@@ -240,6 +303,12 @@ const LAYOUTS = [
   (n, r) => `${pick(PRE, r)}\n${n}\n${pick(POST, r)}`,
   (n, r) => `\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256d\n\u2502 ${n} \u2502\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2570`,
   (n, r) => `${pick(FRAMES, r)} \u00ab ${n} \u00bb ${pick(FRAMES, r)}`,
+  (n, r) => `${pick(FRAMES, r)} \u02d7\u02cf\u02cb ${n} \u02ca\u02cf\u02d7 ${pick(FRAMES, r)}`,
+  (n, r) => `\u2726\u2022\u253b\u0e51\u22c5\u22ef ${n} \u22ef\u22c5\u0e51\u253b\u2022\u2726`,
+  (n, r) => `\u2323\u2323\u2323\n${n}\n\u2323\u2323\u2323`,
+  (n, r) => `${pick(SEP, r)}\n${n}\n${pick(SEP, r)}`,
+  (n, r) => `\u2218\u209a\u2727 ${n} \u2727\u209a\u2218`,
+  (n, r) => `\u300c ${n} \u300d${pick(FRAMES, r)}`,
 ];
 
 function hashTag(text, channel) {
@@ -270,4 +339,4 @@ function decoratedNames(text, tagLine = "", count = 12) {
   return out;
 }
 
-module.exports = { styleList, decoratedNames, applyMap, MAPS, mixName, spacedName, hashTag };
+module.exports = { styleList, decoratedNames, applyMap, MAPS, mixName, spacedName, hashTag, extendTemplates };
